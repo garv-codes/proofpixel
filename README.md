@@ -1,73 +1,58 @@
-# Welcome to your Lovable project
+# ProofPixel — AI Image Forensics
 
-## Project info
+A production-grade deepfake detection platform. Upload any image for instant forensic analysis powered by computer vision and machine learning.
 
-**URL**: https://lovable.dev/projects/REPLACE_WITH_PROJECT_ID
+## Tech Stack
 
-## How can I edit this code?
+| Layer     | Technology                                   |
+| --------- | -------------------------------------------- |
+| Frontend  | React 18, TypeScript, Tailwind CSS, shadcn/ui |
+| Backend   | FastAPI (Python 3.10+)                       |
+| ML        | OpenCV, scikit-image (HOG), scikit-learn (RF) |
+| Database  | MySQL 8+                                     |
 
-There are several ways of editing your application.
+## Getting Started
 
-**Use Lovable**
+### Frontend
 
-Simply visit the [Lovable Project](https://lovable.dev/projects/REPLACE_WITH_PROJECT_ID) and start prompting.
-
-Changes made via Lovable will be committed automatically to this repo.
-
-**Use your preferred IDE**
-
-If you want to work locally using your own IDE, you can clone this repo and push changes. Pushed changes will also be reflected in Lovable.
-
-The only requirement is having Node.js & npm installed - [install with nvm](https://github.com/nvm-sh/nvm#installing-and-updating)
-
-Follow these steps:
-
-```sh
-# Step 1: Clone the repository using the project's Git URL.
-git clone <YOUR_GIT_URL>
-
-# Step 2: Navigate to the project directory.
-cd <YOUR_PROJECT_NAME>
-
-# Step 3: Install the necessary dependencies.
-npm i
-
-# Step 4: Start the development server with auto-reloading and an instant preview.
-npm run dev
+```bash
+npm install
+npm run dev          # starts on http://localhost:5173
 ```
 
-**Edit a file directly in GitHub**
+### Backend
 
-- Navigate to the desired file(s).
-- Click the "Edit" button (pencil icon) at the top right of the file view.
-- Make your changes and commit the changes.
+```bash
+pip install -r requirements.txt
+uvicorn main:app --reload   # starts on http://localhost:8000
+```
 
-**Use GitHub Codespaces**
+### Environment Variables
 
-- Navigate to the main page of your repository.
-- Click on the "Code" button (green button) near the top right.
-- Select the "Codespaces" tab.
-- Click on "New codespace" to launch a new Codespace environment.
-- Edit files directly within the Codespace and commit and push your changes once you're done.
+Create a `.env` file in the project root:
 
-## What technologies are used for this project?
+```env
+DB_HOST=localhost
+DB_USER=root
+DB_PASSWORD=your_password
+DB_NAME=deepfake_detector
+```
 
-This project is built with:
+## Project Structure
 
-- Vite
-- TypeScript
-- React
-- shadcn-ui
-- Tailwind CSS
+```
+proofpixel/
+├── src/                   # React frontend
+│   ├── components/        # Reusable UI components
+│   ├── pages/             # Route-level page components
+│   ├── services/          # API service layer
+│   └── hooks/             # Custom React hooks
+├── main.py                # FastAPI application
+├── ml_service.py          # ML inference pipeline
+├── database.py            # MySQL connection & logging
+└── requirements.txt       # Python dependencies
+```
 
-## How can I deploy this project?
+## License
 
-Simply open [Lovable](https://lovable.dev/projects/REPLACE_WITH_PROJECT_ID) and click on Share -> Publish.
-
-## Can I connect a custom domain to my Lovable project?
-
-Yes, you can!
-
-To connect a domain, navigate to Project > Settings > Domains and click Connect Domain.
-
-Read more here: [Setting up a custom domain](https://docs.lovable.dev/features/custom-domain#custom-domain)
+MIT
