@@ -3,37 +3,39 @@
 ProofPixel — Model Training Script (train_model.py)
 ============================================================================
 
-Trains a Random Forest classifier on the CIFAKE dataset using HOG features.
+Trains a Random Forest classifier on HOG features for deepfake detection.
 
-Dataset: https://www.kaggle.com/datasets/birdy654/cifake-real-and-ai-generated-synthetic-images
-    - 32×32 PNG images in two classes: REAL and FAKE
-    - train/REAL  (50,000)   train/FAKE  (50,000)
-    - test/REAL   (10,000)   test/FAKE   (10,000)
+SUPPORTS MULTIPLE DATASETS:
+    Pass one or more dataset directories via --dataset flags. The script
+    auto-detects common folder naming conventions:
+        - REAL/FAKE  (CIFAKE)
+        - real/fake
+        - Real/Fake
+        - real/ai    (AI Generated vs Real Images)
+        - Real/AI
+
+    Each dataset directory should contain train/ and test/ splits
+    (or the images directly in class subfolders).
+
+Compatible Datasets:
+    1. CIFAKE:  https://www.kaggle.com/datasets/birdy654/cifake-real-and-ai-generated-synthetic-images
+    2. AI Generated vs Real Images:  https://www.kaggle.com/datasets/swati6945/ai-generated-vs-real-images
 
 Usage:
-    1. Download and extract the CIFAKE dataset into a folder (e.g. ./cifake/).
-       The folder structure should be:
-           cifake/
-             train/
-               REAL/  *.png
-               FAKE/  *.png
-             test/
-               REAL/  *.png
-               FAKE/  *.png
+    # Single dataset
+    python train_model.py --dataset ./cifake
 
-    2. Run:
-           python train_model.py --dataset ./cifake
+    # Multiple datasets (combined training for better accuracy)
+    python train_model.py --dataset ./cifake --dataset ./ai-vs-real
 
-    3. The trained model is saved as model.joblib in the project root.
+    # Use all images (no subsampling) — takes longer but higher accuracy
+    python train_model.py --dataset ./cifake --dataset ./ai-vs-real --max-per-class 0
+
+    # Custom estimators and depth
+    python train_model.py --dataset ./cifake --n-estimators 300 --max-depth 30
 
 Dependencies:
     pip install -r requirements.txt
-    (or)  pip install opencv-python-headless scikit-image scikit-learn joblib numpy tqdm
-
-Notes:
-    - To keep training tractable, a configurable subset of images is sampled
-      via --max-per-class (default: 10000).  Set to 0 to use ALL images.
-    - HOG parameters here MUST match those in ml_service.py.
 """
 
 from __future__ import annotations
@@ -44,7 +46,7 @@ import os
 import sys
 import time
 from pathlib import Path
-from typing import List, Tuple
+from typing import List, Tuple, Optional
 
 import cv2
 import joblib
@@ -73,8 +75,14 @@ HOG_ORIENTATIONS: int = 9
 # ---------------------------------------------------------------------------
 # Labels
 # ---------------------------------------------------------------------------
-LABEL_REAL: int = 0  # class index for "Real"
-LABEL_FAKE: int = 1  # class index for "AI-generated / Fake"
+LABEL_REAL: int = 0
+LABEL_FAKE: int = 1
+
+# Auto-detection mapping: folder names → label
+# The script tries each pair until it finds a match.
+REAL_FOLDER_NAMES = ["REAL", "real", "Real", "authentic", "Authentic"]
+FAKE_FOLDER_NAMES = ["FAKE", "fake", "Fake", "ai", "AI", "synthetic", "Synthetic",
+                     "ai_generated", "AI_Generated", "generated", "Generated"]
 
 
 # ---------------------------------------------------------------------------
@@ -107,40 +115,69 @@ def extract_features(image_path: str) -> np.ndarray | None:
 
 
 # ---------------------------------------------------------------------------
-# Dataset loader
+# Auto-detect class folder names
 # ---------------------------------------------------------------------------
 
-def load_dataset(
+def detect_class_folders(split_dir: Path) -> Tuple[str, str] | None:
+    """
+    Scan `split_dir` for subdirectories matching known real/fake naming.
+    Returns (real_folder_name, fake_folder_name) or None if not found.
+    """
+    existing = {d.name for d in split_dir.iterdir() if d.is_dir()}
+
+    for real_name in REAL_FOLDER_NAMES:
+        for fake_name in FAKE_FOLDER_NAMES:
+            if real_name in existing and fake_name in existing:
+                return (real_name, fake_name)
+
+    return None
+
+
+# ---------------------------------------------------------------------------
+# Dataset loader (single dataset)
+# ---------------------------------------------------------------------------
+
+def load_split(
     base_dir: Path,
     split: str,
     max_per_class: int = 0,
-) -> Tuple[np.ndarray, np.ndarray]:
+    dataset_label: str = "",
+) -> Tuple[List[np.ndarray], List[int]]:
     """
-    Load images from ``base_dir/<split>/REAL`` and
-    ``base_dir/<split>/FAKE``, extract HOG features, and return
-    (X, y) arrays.
+    Load images from ``base_dir/<split>/<real_class>`` and
+    ``base_dir/<split>/<fake_class>``, extract HOG features.
 
-    Args:
-        base_dir:       Root of the extracted CIFAKE dataset.
-        split:          ``"train"`` or ``"test"``.
-        max_per_class:  Maximum images to sample per class (0 = unlimited).
-
-    Returns:
-        Tuple of (features_array, labels_array).
+    Returns (features_list, labels_list) — not yet converted to numpy.
     """
+    split_dir = base_dir / split
+    if not split_dir.is_dir():
+        logger.warning("[%s] Split directory not found: %s — skipping.", dataset_label, split_dir)
+        return [], []
+
+    names = detect_class_folders(split_dir)
+    if names is None:
+        logger.error(
+            "[%s] Could not detect Real/Fake class folders in %s. "
+            "Found subdirectories: %s",
+            dataset_label, split_dir,
+            [d.name for d in split_dir.iterdir() if d.is_dir()],
+        )
+        return [], []
+
+    real_name, fake_name = names
+    logger.info("[%s/%s] Detected class folders: Real='%s', Fake='%s'",
+                dataset_label, split, real_name, fake_name)
+
     features_list: List[np.ndarray] = []
     labels_list: List[int] = []
 
-    for label_name, label_id in [("REAL", LABEL_REAL), ("FAKE", LABEL_FAKE)]:
-        class_dir = base_dir / split / label_name
-        if not class_dir.is_dir():
-            logger.error("Directory not found: %s", class_dir)
-            sys.exit(1)
+    for folder_name, label_id in [(real_name, LABEL_REAL), (fake_name, LABEL_FAKE)]:
+        class_dir = split_dir / folder_name
 
         # Gather all image paths
         image_paths = sorted([
             str(p) for p in class_dir.iterdir()
-            if p.suffix.lower() in (".png", ".jpg", ".jpeg")
+            if p.suffix.lower() in (".png", ".jpg", ".jpeg", ".webp", ".bmp")
         ])
 
         # Optionally subsample
@@ -150,14 +187,14 @@ def load_dataset(
             image_paths = [image_paths[i] for i in sorted(indices)]
 
         logger.info(
-            "[%s/%s] Processing %d images…",
-            split, label_name, len(image_paths),
+            "  [%s/%s/%s] Processing %d images…",
+            dataset_label, split, folder_name, len(image_paths),
         )
 
-        # Try to import tqdm for progress bars, fall back to plain loop
+        # Progress bar via tqdm (optional)
         try:
             from tqdm import tqdm
-            iterator = tqdm(image_paths, desc=f"  {label_name}", unit="img")
+            iterator = tqdm(image_paths, desc=f"    {folder_name}", unit="img")
         except ImportError:
             iterator = image_paths
 
@@ -171,11 +208,59 @@ def load_dataset(
                 skipped += 1
 
         if skipped:
-            logger.warning("  Skipped %d unreadable images.", skipped)
+            logger.warning("    Skipped %d unreadable images.", skipped)
 
-    X = np.array(features_list, dtype=np.float64)
-    y = np.array(labels_list, dtype=np.int32)
-    logger.info("[%s] Feature matrix shape: %s", split, X.shape)
+    return features_list, labels_list
+
+
+# ---------------------------------------------------------------------------
+# Multi-dataset loader
+# ---------------------------------------------------------------------------
+
+def load_multi_dataset(
+    dataset_dirs: List[Path],
+    split: str,
+    max_per_class: int = 0,
+) -> Tuple[np.ndarray, np.ndarray]:
+    """
+    Load and combine features from multiple dataset directories.
+
+    Args:
+        dataset_dirs:   List of dataset root paths.
+        split:          "train" or "test".
+        max_per_class:  Max images per class per dataset (0 = unlimited).
+
+    Returns:
+        (X, y) — combined feature matrix and label array.
+    """
+    all_features: List[np.ndarray] = []
+    all_labels: List[int] = []
+
+    for i, base_dir in enumerate(dataset_dirs):
+        label = f"Dataset-{i+1}({base_dir.name})"
+        logger.info("=== Loading %s from %s ===", split, label)
+
+        feats, labels = load_split(base_dir, split, max_per_class, label)
+        all_features.extend(feats)
+        all_labels.extend(labels)
+
+        logger.info("  → Loaded %d samples from %s/%s", len(feats), label, split)
+
+    if not all_features:
+        logger.error("No images were loaded for split '%s'. Check your dataset paths.", split)
+        sys.exit(1)
+
+    X = np.array(all_features, dtype=np.float64)
+    y = np.array(all_labels, dtype=np.int32)
+
+    # Log class distribution
+    real_count = int(np.sum(y == LABEL_REAL))
+    fake_count = int(np.sum(y == LABEL_FAKE))
+    logger.info(
+        "[%s] Combined: %d total samples (Real=%d, Fake=%d)",
+        split, len(y), real_count, fake_count,
+    )
+
     return X, y
 
 
@@ -184,18 +269,35 @@ def load_dataset(
 # ---------------------------------------------------------------------------
 
 def train(args: argparse.Namespace) -> None:
-    """End-to-end training pipeline."""
-    dataset_path = Path(args.dataset).resolve()
-    logger.info("Dataset root: %s", dataset_path)
+    """End-to-end training pipeline with multi-dataset support."""
+
+    dataset_paths = [Path(d).resolve() for d in args.dataset]
+    logger.info("=" * 60)
+    logger.info("ProofPixel Model Training")
+    logger.info("=" * 60)
+    logger.info("Datasets: %s", [str(p) for p in dataset_paths])
+    logger.info("Max per class per dataset: %s", args.max_per_class or "ALL")
+    logger.info("Estimators: %d  |  Max depth: %s  |  Jobs: %d",
+                args.n_estimators, args.max_depth, args.n_jobs)
+    logger.info("=" * 60)
+
+    # Validate directories exist
+    for p in dataset_paths:
+        if not p.is_dir():
+            logger.error("Dataset directory not found: %s", p)
+            sys.exit(1)
 
     # ------------------------------------------------------------------
-    # 1. Load & extract features
+    # 1. Load & extract features from all datasets
     # ------------------------------------------------------------------
-    logger.info("=== Loading training set ===")
-    X_train, y_train = load_dataset(dataset_path, "train", args.max_per_class)
+    X_train, y_train = load_multi_dataset(dataset_paths, "train", args.max_per_class)
+    X_test, y_test = load_multi_dataset(dataset_paths, "test", args.max_per_class)
 
-    logger.info("=== Loading test set ===")
-    X_test, y_test = load_dataset(dataset_path, "test", args.max_per_class)
+    # Shuffle training data (important when combining datasets)
+    rng = np.random.default_rng(seed=42)
+    shuffle_idx = rng.permutation(len(y_train))
+    X_train = X_train[shuffle_idx]
+    y_train = y_train[shuffle_idx]
 
     # ------------------------------------------------------------------
     # 2. Train Random Forest
@@ -225,7 +327,7 @@ def train(args: argparse.Namespace) -> None:
     y_pred = clf.predict(X_test)
 
     acc = accuracy_score(y_test, y_pred)
-    logger.info("Accuracy: %.4f (%.2f%%)", acc, acc * 100)
+    logger.info("★ Overall Accuracy: %.4f (%.2f%%)", acc, acc * 100)
 
     print("\nClassification Report:")
     print(classification_report(
@@ -234,16 +336,36 @@ def train(args: argparse.Namespace) -> None:
     ))
 
     print("Confusion Matrix:")
-    print(confusion_matrix(y_test, y_pred))
+    cm = confusion_matrix(y_test, y_pred)
+    print(cm)
+    print(f"\n  True Negatives (Real→Real):   {cm[0][0]}")
+    print(f"  False Positives (Real→Fake):  {cm[0][1]}")
+    print(f"  False Negatives (Fake→Real):  {cm[1][0]}")
+    print(f"  True Positives (Fake→Fake):   {cm[1][1]}")
 
     # ------------------------------------------------------------------
     # 4. Save model
     # ------------------------------------------------------------------
     output_path = Path(args.output).resolve()
     joblib.dump(clf, output_path)
-    logger.info("Model saved to %s (%.1f MB)",
-                output_path,
-                output_path.stat().st_size / (1024 * 1024))
+    logger.info(
+        "Model saved to %s (%.1f MB)",
+        output_path,
+        output_path.stat().st_size / (1024 * 1024),
+    )
+
+    # ------------------------------------------------------------------
+    # 5. Summary
+    # ------------------------------------------------------------------
+    print("\n" + "=" * 60)
+    print(f"  TRAINING COMPLETE")
+    print(f"  Accuracy:     {acc * 100:.2f}%")
+    print(f"  Train time:   {train_time:.1f}s")
+    print(f"  Train size:   {len(y_train)} samples")
+    print(f"  Test size:    {len(y_test)} samples")
+    print(f"  Datasets:     {len(dataset_paths)}")
+    print(f"  Model saved:  {output_path}")
+    print("=" * 60)
 
 
 # ---------------------------------------------------------------------------
@@ -252,11 +374,13 @@ def train(args: argparse.Namespace) -> None:
 
 def main() -> None:
     parser = argparse.ArgumentParser(
-        description="Train a Random Forest on the CIFAKE dataset using HOG features.",
+        description="Train a Random Forest on HOG features for deepfake detection. "
+                    "Supports combining multiple datasets.",
     )
     parser.add_argument(
-        "--dataset", type=str, required=True,
-        help="Path to the extracted CIFAKE dataset root (contains train/ and test/).",
+        "--dataset", type=str, action="append", required=True,
+        help="Path to a dataset root (contains train/ and test/). "
+             "Can be specified multiple times to combine datasets.",
     )
     parser.add_argument(
         "--output", type=str, default="model.joblib",
@@ -264,7 +388,7 @@ def main() -> None:
     )
     parser.add_argument(
         "--max-per-class", type=int, default=10000,
-        help="Max images per class to use (0 = all). Default: 10000.",
+        help="Max images per class per dataset (0 = all). Default: 10000.",
     )
     parser.add_argument(
         "--n-estimators", type=int, default=200,
