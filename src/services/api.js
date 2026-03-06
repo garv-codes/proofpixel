@@ -6,8 +6,16 @@
  * base URL configuration, and response typing.
  */
 
-/** Base URL for the FastAPI backend. */
-const API_BASE_URL = "http://localhost:8000/api/v1";
+/**
+ * Base URL for the FastAPI backend.
+ *
+ * Reads from the VITE_API_URL environment variable so the same codebase
+ * works in both local development (http://localhost:8000/api/v1) and
+ * production (e.g. https://proofpixel-api.onrender.com/api/v1).
+ *
+ * Set VITE_API_URL in Vercel's Environment Variables settings.
+ */
+const API_BASE_URL = import.meta.env.VITE_API_URL || "http://localhost:8000/api/v1";
 
 /**
  * Sends an image file to the backend for deepfake analysis.

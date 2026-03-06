@@ -79,11 +79,10 @@ app = FastAPI(
 # ---------------------------------------------------------------------------
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=[
-        "http://localhost:5173",   # Vite default
-        "http://localhost:3000",   # common alt
-        "http://localhost:8080",   # legacy
-    ],
+    # Allow all origins so the Vercel-deployed frontend (and local dev)
+    # can reach this API. Tighten this to your specific Vercel domain
+    # in production for better security.
+    allow_origins=["*"],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],

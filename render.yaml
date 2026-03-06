@@ -1,0 +1,22 @@
+# ============================================================================
+# Render Blueprint — ProofPixel FastAPI Backend
+# ============================================================================
+# This file tells Render how to build and run the Python backend.
+# Render auto-detects this file and configures the service accordingly.
+#
+# Docs: https://render.com/docs/blueprint-spec
+# ============================================================================
+
+services:
+  - type: web
+    name: proofpixel-api
+    runtime: python
+    buildCommand: pip install -r requirements.txt
+    startCommand: uvicorn main:app --host 0.0.0.0 --port $PORT
+    envVars:
+      - key: PYTHON_VERSION
+        value: "3.11.6"
+      - key: SUPABASE_URL
+        sync: false   # Set manually in Render dashboard
+      - key: SUPABASE_KEY
+        sync: false   # Set manually in Render dashboard
