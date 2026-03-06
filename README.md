@@ -6,10 +6,10 @@ A production-grade deepfake detection platform. Upload any image for instant for
 
 | Layer     | Technology                                   |
 | --------- | -------------------------------------------- |
-| Frontend  | React 18, TypeScript, Tailwind CSS, shadcn/ui |
+| Frontend  | React 18, JavaScript, Tailwind CSS, shadcn/ui |
 | Backend   | FastAPI (Python 3.10+)                       |
 | ML        | OpenCV, scikit-image (HOG), scikit-learn (RF) |
-| Database  | MySQL 8+                                     |
+| Database  | Supabase (PostgreSQL)                        |
 
 ## Getting Started
 
@@ -27,15 +27,28 @@ pip install -r requirements.txt
 uvicorn main:app --reload   # starts on http://localhost:8000
 ```
 
-### Environment Variables
+### Supabase Setup
 
-Create a `.env` file in the project root:
+1. Create a project at [supabase.com](https://supabase.com)
+2. Run this SQL in the **SQL Editor**:
+
+```sql
+CREATE TABLE IF NOT EXISTS scan_logs (
+    id                BIGSERIAL PRIMARY KEY,
+    image_hash        TEXT NOT NULL,
+    ai_probability    REAL NOT NULL,
+    verdict           TEXT NOT NULL,
+    processing_time_ms INTEGER NOT NULL,
+    created_at        TIMESTAMPTZ DEFAULT NOW()
+);
+```
+
+3. Copy your **Project URL** and **anon key** from Settings → API
+4. Create a `.env` file in the project root:
 
 ```env
-DB_HOST=localhost
-DB_USER=root
-DB_PASSWORD=your_password
-DB_NAME=deepfake_detector
+SUPABASE_URL=https://your-project-id.supabase.co
+SUPABASE_KEY=your-anon-or-service-role-key
 ```
 
 ## Project Structure
@@ -49,7 +62,8 @@ proofpixel/
 │   └── hooks/             # Custom React hooks
 ├── main.py                # FastAPI application
 ├── ml_service.py          # ML inference pipeline
-├── database.py            # MySQL connection & logging
+├── database.py            # Supabase connection & logging
+├── train_model.py         # CIFAKE model training script
 └── requirements.txt       # Python dependencies
 ```
 

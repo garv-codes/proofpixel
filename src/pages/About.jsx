@@ -3,7 +3,7 @@ import { Button } from "@/components/ui/button";
 
 const techStack = [
     "Python", "scikit-learn", "OpenCV", "FastAPI",
-    "React", "TailwindCSS", "HOG", "Random Forest", "MySQL",
+    "React", "TailwindCSS", "HOG", "Random Forest", "Supabase",
 ];
 
 export default function About() {
