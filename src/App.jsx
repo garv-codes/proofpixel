@@ -5,23 +5,15 @@
  * ─────────────────────────────────────────────────────────────────
  * Provider Hierarchy (outermost → innermost):
  *   1. QueryClientProvider — TanStack Query for async state management
- *   2. TooltipProvider     — Radix UI tooltip context
- *   3. BrowserRouter       — React Router v6 client-side routing
+ *   2. AuthProvider        — Supabase auth session context
+ *   3. TooltipProvider     — Radix UI tooltip context
+ *   4. BrowserRouter       — React Router v6 client-side routing
  *
- * Layout Strategy (responsive):
- *   ┌─────────────────────────────────────────────────┐
- *   │ Desktop (md:+)     │  Mobile (<md)              │
- *   │ ┌────────┬────────┐│  ┌──────────────────┐      │
- *   │ │Sidebar │ Main   ││  │ TopBar           │      │
- *   │ │(fixed) │Content ││  │ Main Content     │      │
- *   │ │        │        ││  │ BottomNav (fixed) │      │
- *   │ └────────┴────────┘│  └──────────────────┘      │
- *   └─────────────────────────────────────────────────┘
- *
- * Routes:
- *   /              → Analyzer (image upload + forensic analysis)
- *   /architecture  → System architecture documentation
- *   /about         → Developer profile
+ * Route Protection:
+ *   /              → Protected (requires auth) → Analyzer
+ *   /login         → Public → LoginPage
+ *   /architecture  → Protected → Architecture docs
+ *   /about         → Protected → Developer profile
  *   *              → 404 Not Found
  * ─────────────────────────────────────────────────────────────────
  */
@@ -31,52 +23,60 @@ import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
+import { AuthProvider } from "@/contexts/AuthContext";
+import { ProtectedRoute } from "@/components/ProtectedRoute";
 import { AppSidebar } from "@/components/AppSidebar";
 import { TopBar } from "@/components/TopBar";
 import { BottomNav } from "@/components/BottomNav";
 import Analyzer from "./pages/Analyzer";
 import Architecture from "./pages/Architecture";
 import About from "./pages/About";
+import LoginPage from "./pages/LoginPage";
 import NotFound from "./pages/NotFound";
 
-/* Create a single QueryClient instance outside the component to prevent
- * re-instantiation on every render, which would clear the cache. */
 const queryClient = new QueryClient();
 
 const App = () => (
     <QueryClientProvider client={queryClient}>
-        <TooltipProvider>
-            {/* Toast notification systems */}
-            <Toaster />
-            <Sonner />
+        <AuthProvider>
+            <TooltipProvider>
+                <Toaster />
+                <Sonner />
 
-            <BrowserRouter>
-                <div className="flex min-h-screen w-full bg-slate-950">
-                    {/* Desktop sidebar — hidden below md breakpoint */}
-                    <div className="hidden md:block">
-                        <AppSidebar />
-                    </div>
+                <BrowserRouter>
+                    <Routes>
+                        {/* Public route — login page (no sidebar/nav) */}
+                        <Route path="/login" element={<LoginPage />} />
 
-                    {/* Main content area */}
-                    <div className="flex-1 flex flex-col min-h-screen">
-                        {/* Mobile header — visible only below md breakpoint */}
-                        <TopBar />
-
-                        <main className="flex-1 p-4 md:p-8 overflow-auto pb-20 md:pb-8">
-                            <Routes>
-                                <Route path="/" element={<Analyzer />} />
-                                <Route path="/architecture" element={<Architecture />} />
-                                <Route path="/about" element={<About />} />
-                                <Route path="*" element={<NotFound />} />
-                            </Routes>
-                        </main>
-                    </div>
-
-                    {/* Mobile bottom navigation — hidden on md+ */}
-                    <BottomNav />
-                </div>
-            </BrowserRouter>
-        </TooltipProvider>
+                        {/* Protected routes — wrapped in the app shell layout */}
+                        <Route
+                            path="*"
+                            element={
+                                <ProtectedRoute>
+                                    <div className="flex min-h-screen w-full bg-slate-950">
+                                        <div className="hidden md:block">
+                                            <AppSidebar />
+                                        </div>
+                                        <div className="flex-1 flex flex-col min-h-screen">
+                                            <TopBar />
+                                            <main className="flex-1 p-4 md:p-8 overflow-auto pb-20 md:pb-8">
+                                                <Routes>
+                                                    <Route path="/" element={<Analyzer />} />
+                                                    <Route path="/architecture" element={<Architecture />} />
+                                                    <Route path="/about" element={<About />} />
+                                                    <Route path="*" element={<NotFound />} />
+                                                </Routes>
+                                            </main>
+                                        </div>
+                                        <BottomNav />
+                                    </div>
+                                </ProtectedRoute>
+                            }
+                        />
+                    </Routes>
+                </BrowserRouter>
+            </TooltipProvider>
+        </AuthProvider>
     </QueryClientProvider>
 );
 

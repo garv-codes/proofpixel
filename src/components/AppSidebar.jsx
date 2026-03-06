@@ -1,21 +1,15 @@
 /**
- * AppSidebar — Desktop navigation sidebar
+ * AppSidebar — Desktop navigation sidebar with auth controls
  *
- * Renders a fixed-width sidebar visible on `md:` breakpoints and above.
- * Uses react-router-dom's <NavLink> for declarative active-state styling.
- *
- * Design decisions:
- *   - `hover:scale-105 transition-all` on nav items for snappy micro-interactions
- *   - Active nav item gets an emerald border glow to indicate current page
- *   - "SYSTEM ONLINE" indicator pulses using the Tailwind `animate-pulse-glow` utility
+ * Shows user email and sign-out button at the bottom when authenticated.
+ * Uses hover:scale-105 micro-interactions on nav items.
  */
 
-import { Shield, Cpu, User, ScanEye } from "lucide-react";
+import { Shield, Cpu, User, ScanEye, LogOut } from "lucide-react";
 import { NavLink } from "react-router-dom";
 import { cn } from "@/lib/utils";
+import { useAuth } from "@/contexts/AuthContext";
 
-/* Navigation items — defined outside the component to avoid re-creation on
- * every render. Each entry maps a route to its icon and display label. */
 const navItems = [
     { title: "Analyzer", path: "/", icon: ScanEye },
     { title: "Architecture", path: "/architecture", icon: Cpu },
@@ -23,6 +17,8 @@ const navItems = [
 ];
 
 export function AppSidebar() {
+    const { user, signOut } = useAuth();
+
     return (
         <aside className="w-64 min-h-screen border-r border-slate-800 bg-slate-950 flex flex-col">
             {/* ── Brand Header ────────────────────────────────── */}
@@ -51,9 +47,7 @@ export function AppSidebar() {
                         end={item.path === "/"}
                         className={({ isActive }) =>
                             cn(
-                                /* Base styles shared between active and inactive states */
                                 "flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium",
-                                /* hover:scale-105 gives a subtle "lift" micro-interaction */
                                 "hover:scale-105 transition-all duration-200",
                                 isActive
                                     ? "bg-emerald-500/10 text-emerald-400 border border-emerald-500/30 glow-green"
@@ -67,8 +61,22 @@ export function AppSidebar() {
                 ))}
             </nav>
 
-            {/* ── System Status Indicator ─────────────────────── */}
-            <div className="p-4 border-t border-slate-800">
+            {/* ── User Info + Sign Out ────────────────────────── */}
+            <div className="p-4 border-t border-slate-800 space-y-3">
+                {user && (
+                    <>
+                        <div className="text-[11px] font-mono text-slate-500 truncate" title={user.email}>
+                            {user.email}
+                        </div>
+                        <button
+                            onClick={signOut}
+                            className="flex items-center gap-2 w-full px-3 py-2 rounded-lg text-xs font-mono text-slate-500 hover:text-rose-400 hover:bg-rose-500/10 transition-all duration-200"
+                        >
+                            <LogOut className="h-3.5 w-3.5" />
+                            Sign Out
+                        </button>
+                    </>
+                )}
                 <div className="flex items-center gap-2 text-[10px] font-mono text-slate-500">
                     <span className="h-2 w-2 rounded-full bg-emerald-400 animate-pulse-glow" />
                     SYSTEM ONLINE

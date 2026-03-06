@@ -8,25 +8,25 @@
 
 /**
  * Base URL for the FastAPI backend.
- *
- * Reads from the VITE_API_URL environment variable so the same codebase
- * works in both local development (http://localhost:8000/api/v1) and
- * production (e.g. https://proofpixel-api.onrender.com/api/v1).
- *
- * Set VITE_API_URL in Vercel's Environment Variables settings.
+ * Reads from VITE_API_URL env var (set in Vercel dashboard for production).
  */
 const API_BASE_URL = import.meta.env.VITE_API_URL || "http://localhost:8000/api/v1";
 
 /**
  * Sends an image file to the backend for deepfake analysis.
  *
- * @param {File} file - The image File object to analyze (.jpg, .jpeg, or .png).
+ * @param {File} file - The image File object to analyze.
+ * @param {string|null} userId - Optional Supabase user ID for scan history.
  * @returns {Promise<{label: string, confidence: number, image_hash: string, processing_time_ms: number, is_ai_generated: boolean}>}
- * @throws {{ message: string, status?: number }} When the network request fails or the server returns a non-2xx status code.
  */
-export async function analyzeImage(file) {
+export async function analyzeImage(file, userId = null) {
     const formData = new FormData();
     formData.append("file", file);
+
+    const headers = {};
+    if (userId) {
+        headers["X-User-Id"] = userId;
+    }
 
     let response;
 
@@ -34,6 +34,7 @@ export async function analyzeImage(file) {
         response = await fetch(`${API_BASE_URL}/analyze`, {
             method: "POST",
             body: formData,
+            headers,
         });
     } catch (networkError) {
         throw {
@@ -61,4 +62,25 @@ export async function analyzeImage(file) {
 
     const data = await response.json();
     return data;
+}
+
+/**
+ * Fetches the recent scan history for a given user.
+ *
+ * @param {string} userId - Supabase user UUID.
+ * @param {number} limit - Max number of results (default 10).
+ * @returns {Promise<Array<{id: number, image_hash: string, ai_probability: number, verdict: string, processing_time_ms: number, created_at: string}>>}
+ */
+export async function fetchRecentScans(userId, limit = 10) {
+    if (!userId) return [];
+
+    try {
+        const response = await fetch(
+            `${API_BASE_URL}/scans?user_id=${encodeURIComponent(userId)}&limit=${limit}`
+        );
+        if (!response.ok) return [];
+        return await response.json();
+    } catch {
+        return [];
+    }
 }

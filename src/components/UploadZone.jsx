@@ -1,39 +1,30 @@
 /**
- * UploadZone — File upload interface for the IDLE application state
+ * UploadZone — High-tech glassmorphism upload interface
  *
- * This component handles two distinct upload experiences:
+ * DESIGN PHILOSOPHY:
+ *   The upload zone is the absolute focal point of the Analyzer page.
+ *   It uses a glassmorphism aesthetic (backdrop-blur + semi-transparent bg)
+ *   with a glowing emerald border that intensifies on hover/drag-over.
  *
- *   1. Desktop (md:+) → Drag-and-drop zone with dashed border
- *   2. Mobile (<md)   → "Take Photo" and "Choose from Gallery" buttons
- *
- * WHY two modes?
- *   Mobile browsers don't support drag-and-drop well, and users expect
- *   native-feeling camera/gallery pickers on phones. The `capture="environment"`
- *   attribute triggers the rear camera on mobile devices.
+ *   Desktop: Drag-and-drop zone with inner dashed border + glowing icon
+ *   Mobile:  Gradient action buttons for camera and gallery access
  *
  * Props:
- *   @param {(file: File) => void} onFileSelected — Callback invoked with
- *     the validated image File after the user selects or drops one.
+ *   @param {(file: File) => void} onFileSelected — Callback with validated File
  */
 
-import { useRef, useCallback } from "react";
-import { Upload, Camera, ImageIcon } from "lucide-react";
-import { Button } from "@/components/ui/button";
+import { useRef, useCallback, useState } from "react";
+import { Upload, Camera, ImageIcon, ShieldCheck } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 
-/* Accepted MIME types — we only support raster image formats that the
- * backend's OpenCV pipeline can process. */
 const VALID_TYPES = ["image/jpeg", "image/jpg", "image/png"];
 
 export function UploadZone({ onFileSelected }) {
     const { toast } = useToast();
     const fileInputRef = useRef(null);
     const cameraInputRef = useRef(null);
+    const [isDragOver, setIsDragOver] = useState(false);
 
-    /* ── File validation ────────────────────────────────────────────────
-     * Centralizes the type-check so both drag-drop and input[file] share
-     * the same validation logic. Shows a toast on invalid types instead
-     * of silently failing, which is better UX. */
     const handleFile = useCallback(
         (file) => {
             if (!VALID_TYPES.includes(file.type)) {
@@ -49,12 +40,10 @@ export function UploadZone({ onFileSelected }) {
         [onFileSelected, toast]
     );
 
-    /* ── Drag-and-drop handler ──────────────────────────────────────────
-     * Grabs the first file from the DataTransfer API — we only support
-     * single-file uploads for forensic analysis. */
     const onDrop = useCallback(
         (e) => {
             e.preventDefault();
+            setIsDragOver(false);
             const file = e.dataTransfer.files[0];
             if (file) handleFile(file);
         },
@@ -68,31 +57,61 @@ export function UploadZone({ onFileSelected }) {
 
     return (
         <div className="space-y-6 animate-slide-up">
-            {/* ── Desktop: drag-and-drop zone ────────────────────── */}
+            {/* ── Desktop: Glassmorphism drag-and-drop zone ──────────────
+             * Outer container uses bg-slate-900/50 + backdrop-blur-md for the
+             * frosted glass effect. Border transitions from emerald-500/30 to
+             * emerald-400 on hover/drag-over for a "reactive" feel. */}
             <div
                 onDrop={onDrop}
-                onDragOver={(e) => e.preventDefault()}
-                className="hidden md:block relative border-2 border-dashed border-slate-700 rounded-xl p-16 text-center hover:border-emerald-500/50 hover:bg-emerald-500/5 transition-all duration-300 cursor-pointer group"
+                onDragOver={(e) => { e.preventDefault(); setIsDragOver(true); }}
+                onDragLeave={() => setIsDragOver(false)}
+                className={`hidden md:block relative rounded-2xl transition-all duration-300 cursor-pointer
+                    bg-slate-900/50 backdrop-blur-md
+                    border ${isDragOver
+                        ? "border-emerald-400 shadow-[0_0_40px_rgba(16,185,129,0.2)]"
+                        : "border-emerald-500/30 hover:border-emerald-400 hover:shadow-[0_0_30px_rgba(16,185,129,0.15)]"
+                    }`}
             >
                 <input
                     type="file"
                     accept=".jpg,.jpeg,.png"
                     onChange={onFileInput}
-                    className="absolute inset-0 opacity-0 cursor-pointer"
+                    className="absolute inset-0 opacity-0 cursor-pointer z-10"
                 />
-                <Upload className="h-12 w-12 mx-auto text-slate-500 group-hover:text-emerald-400 transition-colors duration-300" />
-                <p className="mt-4 text-sm font-medium text-slate-300">
-                    Drop image here or click to upload
-                </p>
-                <p className="mt-1 text-xs text-slate-500 font-mono">
-                    .JPG .JPEG .PNG
-                </p>
+
+                {/* Inner dashed border zone */}
+                <div className="m-4 border-2 border-dashed border-slate-700 rounded-xl p-12 text-center group-hover:border-slate-600 transition-colors">
+                    {/* Glowing upload icon */}
+                    <div className={`inline-flex items-center justify-center p-4 rounded-2xl mb-4 transition-all duration-300 ${isDragOver
+                            ? "bg-emerald-500/20 shadow-[0_0_30px_rgba(16,185,129,0.3)]"
+                            : "bg-emerald-500/10"
+                        }`}>
+                        <Upload className={`h-10 w-10 transition-all duration-300 ${isDragOver ? "text-emerald-300 scale-110" : "text-emerald-400"
+                            }`} />
+                    </div>
+
+                    <p className="text-base font-medium text-slate-200">
+                        {isDragOver ? "Release to analyze" : "Drop image here or click to upload"}
+                    </p>
+                    <p className="mt-2 text-xs text-slate-500 font-mono">
+                        Supports JPG, JPEG, PNG
+                    </p>
+
+                    {/* Trust badge */}
+                    <div className="mt-4 inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-slate-800/50 border border-slate-700">
+                        <ShieldCheck className="h-3 w-3 text-emerald-400" />
+                        <span className="text-[10px] font-mono text-slate-500">
+                            SECURE • LOCAL PROCESSING
+                        </span>
+                    </div>
+                </div>
             </div>
 
-            {/* ── Mobile: native camera / gallery buttons ─────────── */}
+            {/* ── Mobile: gradient action buttons ──────────────────────
+             * bg-gradient-to-r from-emerald-500 to-teal-500 creates the
+             * eye-catching gradient. The second button uses a ghost style
+             * with ring border for visual hierarchy. */}
             <div className="flex flex-col gap-3 md:hidden">
-                {/* Hidden file inputs — triggered programmatically via refs
-                 * to avoid ugly native file-input styling */}
                 <input
                     ref={cameraInputRef}
                     type="file"
@@ -108,28 +127,28 @@ export function UploadZone({ onFileSelected }) {
                     onChange={onFileInput}
                     className="hidden"
                 />
-                <Button
-                    variant="neon"
-                    size="lg"
-                    className="w-full min-h-[52px] text-base font-mono hover:scale-105 transition-all duration-200"
+
+                {/* Primary CTA — gradient background */}
+                <button
                     onClick={() => cameraInputRef.current?.click()}
+                    className="w-full min-h-[56px] rounded-xl bg-gradient-to-r from-emerald-500 to-teal-500 text-white font-mono font-semibold text-base flex items-center justify-center gap-2 hover:from-emerald-400 hover:to-teal-400 transition-all duration-200 hover:scale-[1.02] active:scale-[0.98] shadow-lg shadow-emerald-500/20"
                 >
-                    <Camera className="h-5 w-5 mr-2" />
+                    <Camera className="h-5 w-5" />
                     Take Photo
-                </Button>
-                <Button
-                    variant="neon-outline"
-                    size="lg"
-                    className="w-full min-h-[52px] text-base font-mono hover:scale-105 transition-all duration-200"
+                </button>
+
+                {/* Secondary CTA — glassmorphism outline */}
+                <button
                     onClick={() => fileInputRef.current?.click()}
+                    className="w-full min-h-[56px] rounded-xl bg-slate-900/50 backdrop-blur-md border border-emerald-500/30 text-emerald-400 font-mono font-semibold text-base flex items-center justify-center gap-2 hover:border-emerald-400 hover:bg-emerald-500/5 transition-all duration-200 hover:scale-[1.02] active:scale-[0.98]"
                 >
-                    <ImageIcon className="h-5 w-5 mr-2" />
+                    <ImageIcon className="h-5 w-5" />
                     Choose from Gallery
-                </Button>
+                </button>
             </div>
 
             <p className="text-center text-xs text-slate-500 font-mono">
-                Supported: .JPG .JPEG .PNG
+                Supported: .JPG .JPEG .PNG • Max 10MB
             </p>
         </div>
     );

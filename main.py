@@ -10,6 +10,7 @@ Run with:
 
 Endpoints:
     POST /api/v1/analyze   — Upload an image for deepfake analysis.
+    GET  /api/v1/scans     — Fetch recent scans for a user.
     GET  /                  — Health-check / welcome message.
 """
 
@@ -19,13 +20,14 @@ import hashlib
 import logging
 import time
 from contextlib import asynccontextmanager
+from typing import Optional, List
 
-from fastapi import FastAPI, File, HTTPException, UploadFile
+from fastapi import FastAPI, File, Header, HTTPException, Query, UploadFile
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 
 from ml_service import predict_image
-from database import init_db, log_scan
+from database import init_db, log_scan, get_user_scans
 
 # ---------------------------------------------------------------------------
 # Logging
@@ -37,7 +39,7 @@ logging.basicConfig(
 logger = logging.getLogger(__name__)
 
 # ---------------------------------------------------------------------------
-# Pydantic response model
+# Pydantic response models
 # ---------------------------------------------------------------------------
 
 class AnalyzeResponse(BaseModel):
@@ -47,6 +49,16 @@ class AnalyzeResponse(BaseModel):
     image_hash: str             # SHA-256 hex digest
     processing_time_ms: int     # Server-side time in milliseconds
     is_ai_generated: bool       # True → AI-generated
+
+
+class ScanRecord(BaseModel):
+    """Shape of a single scan history item."""
+    id: int
+    image_hash: str
+    ai_probability: float
+    verdict: str
+    processing_time_ms: int
+    created_at: str
 
 
 # ---------------------------------------------------------------------------
@@ -75,13 +87,10 @@ app = FastAPI(
 )
 
 # ---------------------------------------------------------------------------
-# CORS — allow the React dev server to make requests
+# CORS
 # ---------------------------------------------------------------------------
 app.add_middleware(
     CORSMiddleware,
-    # Allow all origins so the Vercel-deployed frontend (and local dev)
-    # can reach this API. Tighten this to your specific Vercel domain
-    # in production for better security.
     allow_origins=["*"],
     allow_credentials=True,
     allow_methods=["*"],
@@ -100,13 +109,17 @@ async def root():
 
 
 @app.post("/api/v1/analyze", response_model=AnalyzeResponse)
-async def analyze_image(file: UploadFile = File(...)):
+async def analyze_image(
+    file: UploadFile = File(...),
+    x_user_id: Optional[str] = Header(None, alias="X-User-Id"),
+):
     """
     Accept an uploaded image, run it through the ML pipeline, log the
-    result to MySQL, and return the analysis.
+    result to Supabase, and return the analysis.
 
     Request:
         - ``file``: multipart-form image upload (.jpg / .jpeg / .png).
+        - ``X-User-Id`` header (optional): Supabase user ID for history tracking.
 
     Returns:
         ``AnalyzeResponse`` JSON object.
@@ -150,13 +163,14 @@ async def analyze_image(file: UploadFile = File(...)):
     label: str = "Fake" if verdict else "Real"
 
     # ------------------------------------------------------------------
-    # 6. Log to MySQL (non-blocking — failure does not break the response)
+    # 6. Log to Supabase (non-blocking — failure does not break response)
     # ------------------------------------------------------------------
     log_scan(
         image_hash=image_hash,
         ai_probability=ai_probability,
         verdict=label,
         processing_time_ms=elapsed_ms,
+        user_id=x_user_id,
     )
 
     # ------------------------------------------------------------------
@@ -169,3 +183,22 @@ async def analyze_image(file: UploadFile = File(...)):
         processing_time_ms=elapsed_ms,
         is_ai_generated=verdict,
     )
+
+
+@app.get("/api/v1/scans", response_model=List[ScanRecord])
+async def list_scans(
+    user_id: str = Query(..., description="Supabase user ID"),
+    limit: int = Query(10, ge=1, le=50, description="Max results"),
+):
+    """
+    Fetch recent scan history for a given user.
+
+    Query params:
+        - ``user_id``: Supabase user UUID.
+        - ``limit``: Number of results (default 10, max 50).
+
+    Returns:
+        A list of ``ScanRecord`` objects ordered by most recent first.
+    """
+    scans = get_user_scans(user_id=user_id, limit=limit)
+    return scans

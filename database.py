@@ -3,11 +3,14 @@
 ProofPixel — Database Layer (database.py)
 ============================================================================
 
-Supabase connection management and scan-log persistence using the
-``supabase`` Python client.
+Supabase connection management and scan-log persistence.
 
 The ``scan_logs`` table must be created in your Supabase project via the
-SQL Editor or Table Editor. See the README for the schema.
+SQL Editor. See the README for the schema.
+
+Required columns:
+    id, image_hash, ai_probability, verdict, processing_time_ms,
+    user_id (TEXT), created_at (TIMESTAMPTZ)
 
 Environment variables (loaded from ``.env``):
     SUPABASE_URL  — Your Supabase project URL
@@ -18,6 +21,7 @@ from __future__ import annotations
 
 import logging
 import os
+from typing import List, Dict, Any
 
 from dotenv import load_dotenv
 from supabase import create_client, Client
@@ -87,6 +91,7 @@ def init_db() -> None:
             ai_probability    REAL NOT NULL,
             verdict           TEXT NOT NULL,
             processing_time_ms INTEGER NOT NULL,
+            user_id           TEXT,
             created_at        TIMESTAMPTZ DEFAULT NOW()
         );
     """
@@ -107,6 +112,7 @@ def log_scan(
     ai_probability: float,
     verdict: str,
     processing_time_ms: int,
+    user_id: str | None = None,
 ) -> bool:
     """
     Insert a new row into the ``scan_logs`` table.
@@ -116,6 +122,7 @@ def log_scan(
         ai_probability:     Confidence score (0.0 – 100.0).
         verdict:            ``"Real"`` or ``"Fake"``.
         processing_time_ms: Server-side processing time in milliseconds.
+        user_id:            Optional Supabase user ID to tie scan to a user.
 
     Returns:
         ``True`` if the record was inserted successfully, ``False`` otherwise.
@@ -126,21 +133,61 @@ def log_scan(
         return False
 
     try:
-        client.table("scan_logs").insert({
+        row = {
             "image_hash": image_hash,
             "ai_probability": ai_probability,
             "verdict": verdict,
             "processing_time_ms": processing_time_ms,
-        }).execute()
+        }
+        if user_id:
+            row["user_id"] = user_id
+
+        client.table("scan_logs").insert(row).execute()
 
         logger.info(
-            "Logged scan: hash=%s… prob=%.2f verdict=%s time=%dms",
+            "Logged scan: hash=%s… prob=%.2f verdict=%s user=%s time=%dms",
             image_hash[:12],
             ai_probability,
             verdict,
+            user_id or "anonymous",
             processing_time_ms,
         )
         return True
     except Exception as exc:
         logger.error("Failed to log scan result: %s", exc)
         return False
+
+
+# ---------------------------------------------------------------------------
+# Fetching user history
+# ---------------------------------------------------------------------------
+
+def get_user_scans(user_id: str, limit: int = 10) -> List[Dict[str, Any]]:
+    """
+    Fetch the most recent scans for a given user.
+
+    Args:
+        user_id: Supabase user ID.
+        limit:   Maximum number of rows to return (default 10).
+
+    Returns:
+        A list of dicts with scan data, ordered by created_at descending.
+    """
+    client = _get_client()
+    if client is None:
+        logger.warning("Cannot fetch scans — Supabase not configured.")
+        return []
+
+    try:
+        response = (
+            client.table("scan_logs")
+            .select("id, image_hash, ai_probability, verdict, processing_time_ms, created_at")
+            .eq("user_id", user_id)
+            .order("created_at", desc=True)
+            .limit(limit)
+            .execute()
+        )
+        return response.data or []
+    except Exception as exc:
+        logger.error("Failed to fetch user scans: %s", exc)
+        return []
