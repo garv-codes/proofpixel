@@ -38,8 +38,9 @@ export async function analyzeImage(file) {
     } catch (networkError) {
         throw {
             message:
-                "Unable to reach the ProofPixel backend. " +
-                "Please ensure the FastAPI server is running on http://localhost:8000.",
+                "Unable to reach the ProofPixel backend at " +
+                API_BASE_URL +
+                ". The server may be starting up — please try again in 30 seconds.",
         };
     }
 
