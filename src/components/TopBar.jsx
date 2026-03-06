@@ -1,18 +1,31 @@
+/**
+ * TopBar — Mobile-only sticky header
+ *
+ * Visible only below the `md:` breakpoint (hidden on desktop where the
+ * sidebar provides branding). Uses `backdrop-blur-md` for a frosted-glass
+ * effect that lets content scroll beneath it.
+ */
+
 import { Shield } from "lucide-react";
 
 export function TopBar() {
     return (
-        <header className="sticky top-0 z-40 flex items-center justify-between px-4 h-14 border-b border-border bg-card/95 backdrop-blur-md md:hidden">
+        <header className="sticky top-0 z-40 flex items-center justify-between px-4 h-14 border-b border-slate-800 bg-slate-950/95 backdrop-blur-md md:hidden">
+            {/* Brand mark */}
             <div className="flex items-center gap-3">
-                <div className="p-1.5 rounded-lg bg-primary/10 glow-green">
-                    <Shield className="h-5 w-5 text-primary" />
+                <div className="p-1.5 rounded-lg bg-emerald-500/10 glow-green">
+                    <Shield className="h-5 w-5 text-emerald-400" />
                 </div>
                 <div>
-                    <h1 className="font-mono font-bold text-foreground text-xs tracking-wider">DEEPFAKE DETECTOR</h1>
+                    <h1 className="font-mono font-bold text-white text-xs tracking-wider">
+                        PROOFPIXEL
+                    </h1>
                 </div>
             </div>
-            <div className="flex items-center gap-2 text-[10px] font-mono text-muted-foreground">
-                <span className="h-2 w-2 rounded-full bg-primary animate-pulse-glow" />
+
+            {/* Status pill */}
+            <div className="flex items-center gap-2 text-[10px] font-mono text-slate-500">
+                <span className="h-2 w-2 rounded-full bg-emerald-400 animate-pulse-glow" />
                 ONLINE
             </div>
         </header>

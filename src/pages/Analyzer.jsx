@@ -1,10 +1,45 @@
-import { useState, useCallback, useEffect, useRef } from "react";
-import { Upload, ScanEye, AlertTriangle, ShieldCheck, ShieldAlert, X, Camera, ImageIcon, RotateCcw } from "lucide-react";
+/**
+ * Analyzer Page — Core application page for AI image forensic analysis
+ *
+ * ═══════════════════════════════════════════════════════════════════════
+ * STATE MACHINE
+ * ═══════════════════════════════════════════════════════════════════════
+ *
+ * The page follows a simple 3-state finite state machine:
+ *
+ *   ┌────────┐  file selected  ┌──────────┐  analysis done  ┌──────────┐
+ *   │  IDLE  │ ──────────────→ │ SCANNING │ ──────────────→ │ RESULTS  │
+ *   └────────┘                 └──────────┘                 └──────────┘
+ *        ↑                                                       │
+ *        └───────────────── "New Scan" click ────────────────────┘
+ *
+ * WHY a state machine?
+ *   Instead of tracking multiple boolean flags (loading, hasResult, etc.),
+ *   a single `appState` variable eliminates impossible state combinations
+ *   and makes the render logic trivially clear.
+ *
+ * COMPONENT COMPOSITION:
+ *   - IDLE     → <UploadZone />       — handles drag-drop and file input
+ *   - SCANNING → <ScannerOverlay />   — animated green scan line
+ *   - RESULTS  → <AnalysisResults />  — verdict card with confidence ring
+ *
+ * This decomposition reduces this file from ~275 lines to ~130 lines,
+ * with each sub-component being independently testable and reusable.
+ * ═══════════════════════════════════════════════════════════════════════
+ */
+
+import { useState, useCallback, useEffect } from "react";
+import { ScanEye } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { ConfidenceRing } from "@/components/ConfidenceRing";
 import { useToast } from "@/hooks/use-toast";
 import { analyzeImage } from "@/services/api";
+import { UploadZone } from "@/components/UploadZone";
+import { ScannerOverlay } from "@/components/ScannerOverlay";
+import { AnalysisResults } from "@/components/AnalysisResults";
 
+/* ── Scan step messages ──────────────────────────────────────────────
+ * Displayed sequentially during the SCANNING state to give the user
+ * real-time feedback about what the ML pipeline is doing. */
 const SCAN_STEPS = [
     "Converting to grayscale...",
     "Applying Gaussian blur...",
@@ -17,256 +52,135 @@ const SCAN_STEPS = [
 ];
 
 export default function Analyzer() {
+    /* ── Application state ───────────────────────────────────────────
+     * `appState` drives which component tree is rendered.
+     * `file` + `preview` hold the current upload.
+     * `result` holds the API response after analysis completes. */
+    const [appState, setAppState] = useState("IDLE"); // "IDLE" | "SCANNING" | "RESULTS"
     const [file, setFile] = useState(null);
     const [preview, setPreview] = useState(null);
-    const [loading, setLoading] = useState(false);
     const [result, setResult] = useState(null);
     const [scanStep, setScanStep] = useState(0);
     const { toast } = useToast();
-    const fileInputRef = useRef(null);
-    const cameraInputRef = useRef(null);
 
-    // Cycle scan steps while loading
+    /* ── Scan step cycler ────────────────────────────────────────────
+     * Cycles through SCAN_STEPS every 600ms while in SCANNING state.
+     * The interval is cleaned up when the state changes, preventing
+     * memory leaks and zombie intervals. */
     useEffect(() => {
-        if (!loading) return;
+        if (appState !== "SCANNING") return;
         setScanStep(0);
         const interval = setInterval(() => {
             setScanStep((s) => (s + 1) % SCAN_STEPS.length);
         }, 600);
         return () => clearInterval(interval);
-    }, [loading]);
+    }, [appState]);
 
-    const handleFile = useCallback((f) => {
-        const valid = ["image/jpeg", "image/jpg", "image/png"];
-        if (!valid.includes(f.type)) {
-            toast({ title: "Invalid file type", description: "Only .jpg, .jpeg, and .png files are accepted.", variant: "destructive" });
-            return;
-        }
-        setFile(f);
+    /* ── File selection handler ──────────────────────────────────────
+     * Called by <UploadZone> when the user selects a valid image.
+     * Reads the file as a data URL for preview, then auto-starts
+     * analysis (skipping an extra "Analyze" button tap on mobile). */
+    const handleFileSelected = useCallback((selectedFile) => {
+        setFile(selectedFile);
         setResult(null);
         const reader = new FileReader();
         reader.onload = (e) => {
             setPreview(e.target?.result);
-            // Auto-run analysis on mobile after selection
-            setTimeout(() => runAnalysisWithFile(f), 300);
+            // Small delay before starting analysis for visual feedback
+            setTimeout(() => runAnalysis(selectedFile), 300);
         };
-        reader.readAsDataURL(f);
-    }, [toast]);
+        reader.readAsDataURL(selectedFile);
+    }, []);
 
-    const onDrop = useCallback((e) => {
-        e.preventDefault();
-        const f = e.dataTransfer.files[0];
-        if (f) handleFile(f);
-    }, [handleFile]);
-
-    const onFileInput = (e) => {
-        const f = e.target.files?.[0];
-        if (f) handleFile(f);
-    };
-
-    const clearFile = () => {
-        setFile(null);
-        setPreview(null);
-        setResult(null);
-    };
-
-    /**
-     * Sends the selected file to the FastAPI backend via the centralized
-     * API service and maps the response to the local result shape.
+    /* ── API call ────────────────────────────────────────────────────
+     * Sends the file to the FastAPI backend and transitions state:
+     *   IDLE → SCANNING → RESULTS (or back to SCANNING state on error)
      */
-    const runAnalysisWithFile = async (targetFile) => {
-        setLoading(true);
+    const runAnalysis = async (targetFile) => {
+        setAppState("SCANNING");
         setResult(null);
 
         try {
             const data = await analyzeImage(targetFile);
-
             setResult({
                 label: data.is_ai_generated ? "Fake" : "Real",
                 confidence: data.confidence,
             });
+            setAppState("RESULTS");
         } catch (err) {
             toast({
                 title: "Analysis Failed",
                 description: err.message ?? "An unexpected error occurred.",
                 variant: "destructive",
             });
-        } finally {
-            setLoading(false);
+            setAppState("IDLE");
         }
     };
 
-    const runAnalysis = () => {
-        if (!file) return;
-        runAnalysisWithFile(file);
+    /* ── Reset handler ───────────────────────────────────────────────
+     * Clears all state and returns to the IDLE upload screen. */
+    const handleNewScan = () => {
+        setFile(null);
+        setPreview(null);
+        setResult(null);
+        setAppState("IDLE");
     };
 
-    const isReal = result?.label === "Real";
-
-    // === IDLE STATE: No image selected ===
-    if (!preview) {
-        return (
-            <div className="max-w-3xl mx-auto space-y-8">
-                {/* Header */}
-                <div>
-                    <h1 className="text-2xl font-bold font-mono tracking-tight text-foreground">
-                        <ScanEye className="inline h-6 w-6 mr-2 text-primary" />
-                        Image Analyzer
-                    </h1>
-                    <p className="text-sm text-muted-foreground mt-1">Upload an image to detect AI-generated artifacts</p>
-                </div>
-
-                {/* Desktop: drag-and-drop */}
-                <div
-                    onDrop={onDrop}
-                    onDragOver={(e) => e.preventDefault()}
-                    className="hidden md:block relative border-2 border-dashed border-border rounded-xl p-16 text-center hover:border-primary/50 hover:bg-primary/5 transition-all cursor-pointer group"
-                >
-                    <input type="file" accept=".jpg,.jpeg,.png" onChange={onFileInput} className="absolute inset-0 opacity-0 cursor-pointer" />
-                    <Upload className="h-12 w-12 mx-auto text-muted-foreground group-hover:text-primary transition-colors" />
-                    <p className="mt-4 text-sm font-medium text-foreground">Drop image here or click to upload</p>
-                    <p className="mt-1 text-xs text-muted-foreground font-mono">.JPG .JPEG .PNG</p>
-                </div>
-
-                {/* Mobile: Take Photo / Choose Gallery buttons */}
-                <div className="flex flex-col gap-3 md:hidden">
-                    <input
-                        ref={cameraInputRef}
-                        type="file"
-                        accept="image/jpeg,image/png"
-                        capture="environment"
-                        onChange={onFileInput}
-                        className="hidden"
-                    />
-                    <input
-                        ref={fileInputRef}
-                        type="file"
-                        accept=".jpg,.jpeg,.png"
-                        onChange={onFileInput}
-                        className="hidden"
-                    />
-                    <Button
-                        variant="neon"
-                        size="lg"
-                        className="w-full min-h-[52px] text-base font-mono"
-                        onClick={() => cameraInputRef.current?.click()}
-                    >
-                        <Camera className="h-5 w-5 mr-2" />
-                        Take Photo
-                    </Button>
-                    <Button
-                        variant="neon-outline"
-                        size="lg"
-                        className="w-full min-h-[52px] text-base font-mono"
-                        onClick={() => fileInputRef.current?.click()}
-                    >
-                        <ImageIcon className="h-5 w-5 mr-2" />
-                        Choose from Gallery
-                    </Button>
-                </div>
-
-                <p className="text-center text-xs text-muted-foreground font-mono">
-                    Supported: .JPG .JPEG .PNG
+    /* ═══════════════════════════════════════════════════════════════
+     * RENDER — Each state maps to exactly one component branch
+     * ═══════════════════════════════════════════════════════════════ */
+    return (
+        <div className="max-w-3xl mx-auto space-y-8">
+            {/* Page header — always visible */}
+            <div>
+                <h1 className="text-2xl font-bold font-mono tracking-tight text-white">
+                    <ScanEye className="inline h-6 w-6 mr-2 text-emerald-400" />
+                    Image Analyzer
+                </h1>
+                <p className="text-sm text-slate-500 mt-1">
+                    Upload an image to detect AI-generated artifacts
                 </p>
             </div>
-        );
-    }
 
-    // === SCANNING / RESULTS STATE ===
-    return (
-        <div className="max-w-3xl mx-auto space-y-6">
-            {/* Image preview */}
-            <div className="relative rounded-xl overflow-hidden border border-border bg-card">
-                <button onClick={clearFile} className="absolute top-3 right-3 z-10 p-2 rounded-full bg-background/80 hover:bg-background text-muted-foreground hover:text-foreground transition-colors min-w-[44px] min-h-[44px] flex items-center justify-center">
-                    <X className="h-4 w-4" />
-                </button>
-                <div className={`relative ${result ? "opacity-60" : ""} transition-opacity duration-500`}>
-                    <img src={preview} alt="Upload preview" className="w-full max-h-[350px] md:max-h-[400px] object-contain bg-muted/20" />
-                    {/* Scan line overlay */}
-                    {loading && (
-                        <div className="absolute inset-0 overflow-hidden pointer-events-none">
-                            <div className="w-full h-0.5 bg-primary shadow-[0_0_15px_hsl(var(--primary)),0_0_40px_hsl(var(--primary))] animate-scan-line" />
-                        </div>
-                    )}
-                </div>
-            </div>
-
-            {/* Scanning text */}
-            {loading && (
-                <div className="text-center space-y-2">
-                    <div className="flex items-center justify-center gap-2">
-                        <svg className="animate-spin h-4 w-4 text-primary" viewBox="0 0 24 24" fill="none">
-                            <circle cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="3" className="opacity-25" />
-                            <path d="M4 12a8 8 0 018-8" stroke="currentColor" strokeWidth="3" strokeLinecap="round" className="opacity-75" />
-                        </svg>
-                        <p className="text-sm font-mono text-primary text-glow-green animate-pulse">{SCAN_STEPS[scanStep]}</p>
-                    </div>
-                </div>
+            {/* ── IDLE STATE: Show upload zone ── */}
+            {appState === "IDLE" && (
+                <UploadZone onFileSelected={handleFileSelected} />
             )}
 
-            {/* Desktop: manual run button (only if no result and not loading) */}
-            {!result && !loading && (
+            {/* ── SCANNING STATE: Show image with scanner overlay ── */}
+            {appState === "SCANNING" && (
+                <ScannerOverlay
+                    preview={preview}
+                    isScanning={true}
+                    scanStepText={SCAN_STEPS[scanStep]}
+                    onClear={handleNewScan}
+                />
+            )}
+
+            {/* ── RESULTS STATE: Show verdict + image preview ── */}
+            {appState === "RESULTS" && (
+                <>
+                    <ScannerOverlay
+                        preview={preview}
+                        isScanning={false}
+                        scanStepText=""
+                        onClear={handleNewScan}
+                    />
+                    <AnalysisResults result={result} onNewScan={handleNewScan} />
+                </>
+            )}
+
+            {/* Desktop-only manual run button — shown when image is selected
+             * but analysis hasn't started (edge case: drag-drop without auto-run) */}
+            {appState === "IDLE" && file && !result && (
                 <Button
                     variant="neon"
                     size="lg"
-                    className="w-full font-mono text-sm hidden md:flex"
-                    onClick={runAnalysis}
-                    disabled={loading}
+                    className="w-full font-mono text-sm hidden md:flex hover:scale-105 transition-all duration-200"
+                    onClick={() => runAnalysis(file)}
                 >
                     <ScanEye className="h-4 w-4 mr-2" />
                     Run AI Analysis
-                </Button>
-            )}
-
-            {/* Results */}
-            {result && (
-                <div className={`rounded-xl border p-6 md:p-8 ${isReal ? "border-glow-green bg-primary/5" : "border-glow-red bg-destructive/5"} animate-fade-in`}>
-                    <div className="flex flex-col items-center gap-5">
-                        {/* Mobile: large percentage text */}
-                        <div className="md:hidden text-center">
-                            <span className={`text-7xl font-mono font-black tracking-tighter ${isReal ? "text-primary text-glow-green" : "text-destructive text-glow-red"}`}>
-                                {result.confidence.toFixed(0)}%
-                            </span>
-                            <p className="text-xs text-muted-foreground font-mono mt-1">CONFIDENCE</p>
-                        </div>
-
-                        {/* Desktop: confidence ring */}
-                        <div className="hidden md:block">
-                            <ConfidenceRing percentage={result.confidence} isReal={isReal} />
-                        </div>
-
-                        <div className="flex items-center gap-3">
-                            {isReal ? (
-                                <div className="flex items-center gap-2 px-5 py-2.5 rounded-full bg-primary/15 border border-primary/30 glow-green">
-                                    <ShieldCheck className="h-5 w-5 text-primary" />
-                                    <span className="font-mono font-bold text-sm text-primary text-glow-green">AUTHENTIC</span>
-                                </div>
-                            ) : (
-                                <div className="flex items-center gap-2 px-5 py-2.5 rounded-full bg-destructive/15 border border-destructive/30 glow-red">
-                                    <ShieldAlert className="h-5 w-5 text-destructive" />
-                                    <span className="font-mono font-bold text-sm text-destructive text-glow-red">AI GENERATED</span>
-                                </div>
-                            )}
-                        </div>
-
-                        <div className="flex items-center gap-2 text-xs text-muted-foreground font-mono">
-                            <AlertTriangle className="h-3 w-3" />
-                            Analysis is probabilistic — verify with additional methods
-                        </div>
-                    </div>
-                </div>
-            )}
-
-            {/* New Scan button */}
-            {result && (
-                <Button
-                    variant="neon-outline"
-                    size="lg"
-                    className="w-full font-mono text-sm min-h-[48px]"
-                    onClick={clearFile}
-                >
-                    <RotateCcw className="h-4 w-4 mr-2" />
-                    Start New Scan
                 </Button>
             )}
         </div>
