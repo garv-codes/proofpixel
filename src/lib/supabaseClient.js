@@ -9,6 +9,11 @@
  * Environment Variables (set in .env or Vercel dashboard):
  *   VITE_SUPABASE_URL      — Your Supabase project URL
  *   VITE_SUPABASE_ANON_KEY — Your Supabase anonymous (public) API key
+ *
+ * RESILIENCE:
+ *   If env vars are missing, the client is created with placeholder values.
+ *   Auth calls will fail gracefully (LoginPage shows an error) instead of
+ *   crashing the entire React tree with an unhandled exception.
  */
 
 import { createClient } from "@supabase/supabase-js";
@@ -17,10 +22,19 @@ const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
 const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
 
 if (!supabaseUrl || !supabaseAnonKey) {
-    console.error(
-        "Missing VITE_SUPABASE_URL or VITE_SUPABASE_ANON_KEY environment variables. " +
-        "Authentication will not work."
+    console.warn(
+        "[ProofPixel] Missing VITE_SUPABASE_URL or VITE_SUPABASE_ANON_KEY. " +
+        "Add them to your .env file (local) or Vercel Environment Variables (production). " +
+        "Auth features will not work until these are set."
     );
 }
 
-export const supabase = createClient(supabaseUrl || "", supabaseAnonKey || "");
+/**
+ * Supabase client — uses a dummy URL as fallback when env vars are missing.
+ * This prevents createClient from throwing and crashing the app.
+ * Auth calls will fail with a network error, which the LoginPage handles gracefully.
+ */
+export const supabase = createClient(
+    supabaseUrl || "https://placeholder.supabase.co",
+    supabaseAnonKey || "placeholder-key"
+);
