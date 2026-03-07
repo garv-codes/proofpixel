@@ -34,5 +34,10 @@ venv/
 .venv/
 
 # ML model files
-*.joblib
 *.pkl
+# model.joblib is tracked via Git LFS (see below)
+
+# Training datasets (too large for git)
+cifake/
+ai-vs-real/
+datasets/
