@@ -68,9 +68,28 @@ def _load_model():
         return _model
 
     if MODEL_PATH.exists():
-        logger.info("Loading model from %s", MODEL_PATH)
-        _model = joblib.load(MODEL_PATH)
-        return _model
+        # Check if the file is a Git LFS pointer (tiny text file, not real model)
+        file_size = MODEL_PATH.stat().st_size
+        if file_size < 1024:  # Real model is 300+ MB; LFS pointer is ~130 bytes
+            logger.warning(
+                "Model file at %s is only %d bytes — likely a Git LFS pointer. "
+                "Run 'git lfs pull' to download the actual model. "
+                "Using random placeholder predictions.",
+                MODEL_PATH, file_size,
+            )
+            return None
+
+        try:
+            logger.info("Loading model from %s (%d MB)", MODEL_PATH, file_size // (1024 * 1024))
+            _model = joblib.load(MODEL_PATH)
+            return _model
+        except Exception as exc:
+            logger.error(
+                "Failed to load model from %s: %s. "
+                "Using random placeholder predictions.",
+                MODEL_PATH, exc,
+            )
+            return None
 
     logger.warning(
         "Model file not found at %s. "
