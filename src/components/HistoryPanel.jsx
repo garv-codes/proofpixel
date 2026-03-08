@@ -104,7 +104,10 @@ export function HistoryPanel({ userId, refreshKey }) {
                     </AlertDialogTrigger>
 
                     {scans.length > 0 && (
-                        <AlertDialogContent className="bg-slate-900 border-slate-800 text-slate-200">
+                        <AlertDialogContent
+                            className="bg-slate-900 border-slate-800 text-slate-200"
+                            onCloseAutoFocus={(e) => e.preventDefault()}
+                        >
                             <AlertDialogHeader>
                                 <AlertDialogTitle className="font-mono text-white">Clear Scan History?</AlertDialogTitle>
                                 <AlertDialogDescription className="text-slate-400 leading-relaxed">
