@@ -88,21 +88,22 @@ export function HistoryPanel({ userId, refreshKey }) {
                 </div>
 
                 {/* Clear All Button & Modal */}
-                {scans.length > 0 && !loading && (
-                    <AlertDialog>
-                        <AlertDialogTrigger asChild>
-                            <button
-                                disabled={clearing}
-                                className="flex items-center gap-1.5 text-xs font-mono text-slate-500 hover:text-rose-400 transition-colors focus:outline-none disabled:opacity-50"
-                            >
-                                {clearing ? (
-                                    <Loader2 className="h-3.5 w-3.5 animate-spin" />
-                                ) : (
-                                    <Trash2 className="h-3.5 w-3.5" />
-                                )}
-                                <span>Clear All</span>
-                            </button>
-                        </AlertDialogTrigger>
+                <AlertDialog>
+                    <AlertDialogTrigger asChild>
+                        <button
+                            disabled={clearing || scans.length === 0}
+                            className={`flex items-center gap-1.5 text-xs font-mono transition-colors focus:outline-none disabled:opacity-50 ${scans.length === 0 || loading ? 'hidden' : 'text-slate-500 hover:text-rose-400'}`}
+                        >
+                            {clearing ? (
+                                <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                            ) : (
+                                <Trash2 className="h-3.5 w-3.5" />
+                            )}
+                            <span>Clear All</span>
+                        </button>
+                    </AlertDialogTrigger>
+
+                    {scans.length > 0 && (
                         <AlertDialogContent className="bg-slate-900 border-slate-800 text-slate-200">
                             <AlertDialogHeader>
                                 <AlertDialogTitle className="font-mono text-white">Clear Scan History?</AlertDialogTitle>
@@ -122,8 +123,8 @@ export function HistoryPanel({ userId, refreshKey }) {
                                 </AlertDialogAction>
                             </AlertDialogFooter>
                         </AlertDialogContent>
-                    </AlertDialog>
-                )}
+                    )}
+                </AlertDialog>
             </div>
 
             {/* Loading state */}
