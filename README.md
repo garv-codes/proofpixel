@@ -1,3 +1,12 @@
+---
+title: ProofPixel
+emoji: 🛡️
+colorFrom: gray
+colorTo: indigo
+sdk: docker
+pinned: false
+---
+
 # 🛡️ ProofPixel — AI Image Forensics
 
 A production-grade deepfake detection platform that analyzes images for AI-generated artifacts using computer vision and machine learning. Built with a React frontend, FastAPI backend, and a Random Forest classifier trained on HOG features.
