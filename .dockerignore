@@ -13,3 +13,7 @@ build
 cifake/
 ai-vs-real/
 datasets/
+
+# Environments
+.venv/
+venv/
