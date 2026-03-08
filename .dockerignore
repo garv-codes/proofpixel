@@ -8,3 +8,8 @@ __pycache__
 .svelte-kit
 .next
 build
+
+# Datasets
+cifake/
+ai-vs-real/
+datasets/
