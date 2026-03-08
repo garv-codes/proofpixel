@@ -14,7 +14,7 @@
  */
 
 import { useState, useEffect } from "react";
-import { Clock, Shield, AlertTriangle, History, Trash2, Loader2 } from "lucide-react";
+import { Clock, Shield, AlertTriangle, History, Trash2, Loader2, SearchX } from "lucide-react";
 import { fetchRecentScans, clearRecentScans } from "@/services/api";
 import { toast } from "sonner";
 import {
@@ -138,11 +138,14 @@ export function HistoryPanel({ userId, refreshKey }) {
 
             {/* Empty state */}
             {!loading && scans.length === 0 && (
-                <div className="text-center py-8">
-                    <Shield className="h-8 w-8 text-slate-700 mx-auto mb-2" />
-                    <p className="text-xs text-slate-600 font-mono">No scans yet</p>
-                    <p className="text-[10px] text-slate-700 mt-1">
-                        Upload an image to start
+                <div className="text-center py-12 px-4 rounded-xl border border-dashed border-slate-800/80 bg-slate-900/30">
+                    <div className="mx-auto w-16 h-16 mb-4 relative flex items-center justify-center">
+                        <div className="absolute inset-0 rounded-full bg-emerald-500/10 blur-xl"></div>
+                        <SearchX className="h-8 w-8 text-slate-500 relative z-10" />
+                    </div>
+                    <p className="text-sm font-semibold text-slate-300 mb-1">Your history is clear</p>
+                    <p className="text-[11px] text-slate-500 max-w-[200px] mx-auto leading-relaxed">
+                        Every image you analyze will automatically be saved securely here for easy reference.
                     </p>
                 </div>
             )}

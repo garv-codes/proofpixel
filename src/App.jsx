@@ -55,7 +55,7 @@ const App = () => (
                             path="*"
                             element={
                                 <ProtectedRoute>
-                                    <div className="flex min-h-screen w-full bg-slate-950">
+                                    <div className="flex min-h-screen w-full bg-slate-950 bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-slate-900 via-slate-950 to-slate-950">
                                         <div className="hidden md:block">
                                             <AppSidebar />
                                         </div>

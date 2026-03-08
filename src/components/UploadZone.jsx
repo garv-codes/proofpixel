@@ -83,15 +83,15 @@ export function UploadZone({ onFileSelected }) {
                 <div className="m-4 border-2 border-dashed border-slate-700 rounded-xl p-12 text-center group-hover:border-slate-600 transition-colors">
                     {/* Glowing upload icon */}
                     <div className={`inline-flex items-center justify-center p-4 rounded-2xl mb-4 transition-all duration-300 ${isDragOver
-                            ? "bg-emerald-500/20 shadow-[0_0_30px_rgba(16,185,129,0.3)]"
-                            : "bg-emerald-500/10"
+                        ? "bg-emerald-500/20 shadow-[0_0_30px_rgba(16,185,129,0.3)]"
+                        : "bg-emerald-500/10"
                         }`}>
                         <Upload className={`h-10 w-10 transition-all duration-300 ${isDragOver ? "text-emerald-300 scale-110" : "text-emerald-400"
                             }`} />
                     </div>
 
                     <p className="text-base font-medium text-slate-200">
-                        {isDragOver ? "Release to analyze" : "Drop image here or click to upload"}
+                        {isDragOver ? "Release to analyze" : "Upload an image, and our AI will tell you if it's real or generated."}
                     </p>
                     <p className="mt-2 text-xs text-slate-500 font-mono">
                         Supports JPG, JPEG, PNG
