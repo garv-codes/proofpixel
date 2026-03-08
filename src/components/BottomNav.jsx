@@ -13,7 +13,7 @@ import { NavLink } from "react-router-dom";
 import { cn } from "@/lib/utils";
 
 const navItems = [
-    { title: "Analyze", path: "/", icon: ScanEye },
+    { title: "Analyze", path: "/dashboard", icon: ScanEye },
     { title: "Architecture", path: "/architecture", icon: Cpu },
     { title: "About", path: "/about", icon: User },
 ];
@@ -26,7 +26,7 @@ export function BottomNav() {
                     <NavLink
                         key={item.path}
                         to={item.path}
-                        end={item.path === "/"}
+                        end={item.path === "/dashboard"}
                         className={({ isActive }) =>
                             cn(
                                 "flex flex-col items-center justify-center gap-1 min-w-[64px] min-h-[44px] px-3 py-2 rounded-lg",

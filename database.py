@@ -191,3 +191,27 @@ def get_user_scans(user_id: str, limit: int = 10) -> List[Dict[str, Any]]:
     except Exception as exc:
         logger.error("Failed to fetch user scans: %s", exc)
         return []
+
+
+def clear_user_scans(user_id: str) -> bool:
+    """
+    Delete all scan history for a given user.
+
+    Args:
+        user_id: Supabase user ID.
+
+    Returns:
+        True if successful, False otherwise.
+    """
+    client = _get_client()
+    if client is None:
+        logger.warning("Cannot delete scans — Supabase not configured.")
+        return False
+
+    try:
+        client.table("scan_logs").delete().eq("user_id", user_id).execute()
+        logger.info("Cleared scan history for user: %s", user_id)
+        return True
+    except Exception as exc:
+        logger.error("Failed to clear user scans: %s", exc)
+        return False

@@ -27,7 +27,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 
 from ml_service import predict_image
-from database import init_db, log_scan, get_user_scans
+from database import init_db, log_scan, get_user_scans, clear_user_scans
 
 # ---------------------------------------------------------------------------
 # Logging
@@ -206,3 +206,23 @@ async def list_scans(
     """
     scans = get_user_scans(user_id=user_id, limit=limit)
     return scans
+
+
+@app.delete("/api/v1/scans")
+async def delete_scans(
+    user_id: str = Header(..., alias="X-User-Id", description="Supabase user ID"),
+):
+    """
+    Delete all scan history for the authenticated user.
+
+    Headers:
+        - ``X-User-Id``: Supabase user UUID.
+
+    Returns:
+        Success message.
+    """
+    success = clear_user_scans(user_id)
+    if not success:
+        raise HTTPException(status_code=500, detail="Failed to clear scan history.")
+    
+    return {"status": "success", "message": "Scan history cleared."}

@@ -14,8 +14,20 @@
  */
 
 import { useState, useEffect } from "react";
-import { Clock, Shield, AlertTriangle, History } from "lucide-react";
-import { fetchRecentScans } from "@/services/api";
+import { Clock, Shield, AlertTriangle, History, Trash2, Loader2 } from "lucide-react";
+import { fetchRecentScans, clearRecentScans } from "@/services/api";
+import { toast } from "sonner";
+import {
+    AlertDialog,
+    AlertDialogAction,
+    AlertDialogCancel,
+    AlertDialogContent,
+    AlertDialogDescription,
+    AlertDialogFooter,
+    AlertDialogHeader,
+    AlertDialogTitle,
+    AlertDialogTrigger,
+} from "@/components/ui/alert-dialog";
 
 /**
  * Converts an ISO timestamp to a human-friendly relative time string.
@@ -36,6 +48,7 @@ function timeAgo(dateString) {
 export function HistoryPanel({ userId, refreshKey }) {
     const [scans, setScans] = useState([]);
     const [loading, setLoading] = useState(true);
+    const [clearing, setClearing] = useState(false);
 
     useEffect(() => {
         if (!userId) return;
@@ -45,14 +58,72 @@ export function HistoryPanel({ userId, refreshKey }) {
             .finally(() => setLoading(false));
     }, [userId, refreshKey]);
 
+    const handleClearHistory = async () => {
+        if (!userId) return;
+        setClearing(true);
+        try {
+            const success = await clearRecentScans(userId);
+            if (success) {
+                setScans([]);
+                toast.success("Scan history cleared successfully.");
+            } else {
+                toast.error("Failed to clear scan history.");
+            }
+        } catch (error) {
+            toast.error("An error occurred while clearing history.");
+        } finally {
+            setClearing(false);
+        }
+    };
+
     return (
         <div className="rounded-2xl border border-slate-800 bg-slate-900/50 backdrop-blur-md p-5 h-fit">
             {/* Header */}
-            <div className="flex items-center gap-2 mb-4">
-                <History className="h-4 w-4 text-emerald-400" />
-                <h2 className="text-sm font-mono font-bold text-white tracking-wider">
-                    RECENT SCANS
-                </h2>
+            <div className="flex items-center justify-between mb-4">
+                <div className="flex items-center gap-2">
+                    <History className="h-4 w-4 text-emerald-400" />
+                    <h2 className="text-sm font-mono font-bold text-white tracking-wider">
+                        RECENT SCANS
+                    </h2>
+                </div>
+
+                {/* Clear All Button & Modal */}
+                {scans.length > 0 && !loading && (
+                    <AlertDialog>
+                        <AlertDialogTrigger asChild>
+                            <button
+                                disabled={clearing}
+                                className="flex items-center gap-1.5 text-xs font-mono text-slate-500 hover:text-rose-400 transition-colors focus:outline-none disabled:opacity-50"
+                            >
+                                {clearing ? (
+                                    <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                                ) : (
+                                    <Trash2 className="h-3.5 w-3.5" />
+                                )}
+                                <span>Clear All</span>
+                            </button>
+                        </AlertDialogTrigger>
+                        <AlertDialogContent className="bg-slate-900 border-slate-800 text-slate-200">
+                            <AlertDialogHeader>
+                                <AlertDialogTitle className="font-mono text-white">Clear Scan History?</AlertDialogTitle>
+                                <AlertDialogDescription className="text-slate-400 leading-relaxed">
+                                    Are you sure you want to delete your entire scan history? This cannot be undone.
+                                </AlertDialogDescription>
+                            </AlertDialogHeader>
+                            <AlertDialogFooter>
+                                <AlertDialogCancel className="bg-transparent border-slate-700 hover:bg-slate-800 hover:text-slate-200 focus:ring-slate-700">
+                                    Cancel
+                                </AlertDialogCancel>
+                                <AlertDialogAction
+                                    onClick={handleClearHistory}
+                                    className="bg-rose-500 hover:bg-rose-600 text-white font-mono"
+                                >
+                                    Delete All
+                                </AlertDialogAction>
+                            </AlertDialogFooter>
+                        </AlertDialogContent>
+                    </AlertDialog>
+                )}
             </div>
 
             {/* Loading state */}
@@ -88,8 +159,8 @@ export function HistoryPanel({ userId, refreshKey }) {
                             >
                                 {/* Thumbnail placeholder — hash-based color */}
                                 <div className={`flex-shrink-0 h-10 w-10 rounded-lg flex items-center justify-center text-xs font-mono ${isAI
-                                        ? "bg-rose-500/10 border border-rose-500/30 text-rose-400"
-                                        : "bg-emerald-500/10 border border-emerald-500/30 text-emerald-400"
+                                    ? "bg-rose-500/10 border border-rose-500/30 text-rose-400"
+                                    : "bg-emerald-500/10 border border-emerald-500/30 text-emerald-400"
                                     }`}>
                                     {isAI
                                         ? <AlertTriangle className="h-4 w-4" />
@@ -102,8 +173,8 @@ export function HistoryPanel({ userId, refreshKey }) {
                                     <div className="flex items-center gap-2">
                                         {/* Verdict badge */}
                                         <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-mono font-bold ${isAI
-                                                ? "bg-rose-500/10 text-rose-400 border border-rose-500/30"
-                                                : "bg-emerald-500/10 text-emerald-400 border border-emerald-500/30"
+                                            ? "bg-rose-500/10 text-rose-400 border border-rose-500/30"
+                                            : "bg-emerald-500/10 text-emerald-400 border border-emerald-500/30"
                                             }`}>
                                             {isAI ? "AI" : "REAL"}
                                         </span>

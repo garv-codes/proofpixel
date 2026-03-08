@@ -11,7 +11,7 @@ import { cn } from "@/lib/utils";
 import { useAuth } from "@/contexts/AuthContext";
 
 const navItems = [
-    { title: "Analyzer", path: "/", icon: ScanEye },
+    { title: "Analyzer", path: "/dashboard", icon: ScanEye },
     { title: "Architecture", path: "/architecture", icon: Cpu },
     { title: "About", path: "/about", icon: User },
 ];
@@ -44,7 +44,7 @@ export function AppSidebar() {
                     <NavLink
                         key={item.path}
                         to={item.path}
-                        end={item.path === "/"}
+                        end={item.path === "/dashboard"}
                         className={({ isActive }) =>
                             cn(
                                 "flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium",

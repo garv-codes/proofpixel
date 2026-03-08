@@ -32,6 +32,7 @@ import Analyzer from "./pages/Analyzer";
 import Architecture from "./pages/Architecture";
 import About from "./pages/About";
 import LoginPage from "./pages/LoginPage";
+import LandingPage from "./pages/LandingPage";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -45,7 +46,8 @@ const App = () => (
 
                 <BrowserRouter>
                     <Routes>
-                        {/* Public route — login page (no sidebar/nav) */}
+                        {/* Public route — login page & landing page (no sidebar/nav) */}
+                        <Route path="/" element={<LandingPage />} />
                         <Route path="/login" element={<LoginPage />} />
 
                         {/* Protected routes — wrapped in the app shell layout */}
@@ -61,7 +63,7 @@ const App = () => (
                                             <TopBar />
                                             <main className="flex-1 p-4 md:p-8 overflow-auto pb-20 md:pb-8">
                                                 <Routes>
-                                                    <Route path="/" element={<Analyzer />} />
+                                                    <Route path="/dashboard" element={<Analyzer />} />
                                                     <Route path="/architecture" element={<Architecture />} />
                                                     <Route path="/about" element={<About />} />
                                                     <Route path="*" element={<NotFound />} />

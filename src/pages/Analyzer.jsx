@@ -18,7 +18,7 @@
  */
 
 import { useState, useCallback, useEffect } from "react";
-import { ScanEye } from "lucide-react";
+import { ScanEye, Lightbulb } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/contexts/AuthContext";
 import { analyzeImage } from "@/services/api";
@@ -122,9 +122,47 @@ export default function Analyzer() {
                     </p>
                 </div>
 
-                {/* IDLE → Upload zone */}
+                {/* IDLE → Upload zone + Tips */}
                 {appState === "IDLE" && (
-                    <UploadZone onFileSelected={handleFileSelected} />
+                    <>
+                        <UploadZone onFileSelected={handleFileSelected} />
+
+                        {/* Deepfake Detection Tips */}
+                        <div className="mt-8 pt-8 border-t border-slate-800/50">
+                            <div className="flex items-center gap-2 mb-6">
+                                <Lightbulb className="h-5 w-5 text-amber-400" />
+                                <h2 className="text-lg font-mono font-bold text-white tracking-tight">
+                                    Deepfake Detection Tips
+                                </h2>
+                            </div>
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                <div className="p-4 rounded-xl bg-slate-900/30 border border-slate-800/80 text-sm">
+                                    <h3 className="font-bold font-mono text-slate-200 mb-2 truncate">Asymmetrical Lighting</h3>
+                                    <p className="text-slate-400 leading-relaxed text-xs">
+                                        Check if shadows align with the light sources. AI often struggles with global illumination consistency.
+                                    </p>
+                                </div>
+                                <div className="p-4 rounded-xl bg-slate-900/30 border border-slate-800/80 text-sm">
+                                    <h3 className="font-bold font-mono text-slate-200 mb-2 truncate">Unnatural Textures</h3>
+                                    <p className="text-slate-400 leading-relaxed text-xs">
+                                        Look closely at skin, hair, and clothing. AI models frequently blur details or create repetitive patterns.
+                                    </p>
+                                </div>
+                                <div className="p-4 rounded-xl bg-slate-900/30 border border-slate-800/80 text-sm">
+                                    <h3 className="font-bold font-mono text-slate-200 mb-2 truncate">Distorted Backgrounds</h3>
+                                    <p className="text-slate-400 leading-relaxed text-xs">
+                                        AI focuses on the main subject. Background objects, text, and straight lines are often warped or illegible.
+                                    </p>
+                                </div>
+                                <div className="p-4 rounded-xl bg-slate-900/30 border border-slate-800/80 text-sm">
+                                    <h3 className="font-bold font-mono text-slate-200 mb-2 truncate">Weird Hands & Teeth</h3>
+                                    <p className="text-slate-400 leading-relaxed text-xs">
+                                        Generators have trouble with complex anatomy. Look for extra fingers, blended teeth, or structural impossible geometry.
+                                    </p>
+                                </div>
+                            </div>
+                        </div>
+                    </>
                 )}
 
                 {/* SCANNING → Scanner overlay */}

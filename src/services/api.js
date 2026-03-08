@@ -84,3 +84,25 @@ export async function fetchRecentScans(userId, limit = 10) {
         return [];
     }
 }
+
+/**
+ * Clears the scan history for a given user.
+ *
+ * @param {string} userId - Supabase user UUID.
+ * @returns {Promise<boolean>} True if successful, false otherwise.
+ */
+export async function clearRecentScans(userId) {
+    if (!userId) return false;
+
+    try {
+        const response = await fetch(`${API_BASE_URL}/scans`, {
+            method: "DELETE",
+            headers: {
+                "X-User-Id": userId,
+            },
+        });
+        return response.ok;
+    } catch {
+        return false;
+    }
+}
