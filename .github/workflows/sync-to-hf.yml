@@ -1,0 +1,26 @@
+name: Sync to Hugging Face Space
+
+on:
+  # Triggers the workflow on push events but only for the main branch
+  push:
+    branches: [ main ]
+  # Allows you to run this workflow manually from the Actions tab
+  workflow_dispatch:
+
+jobs:
+  sync-to-hub:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+        with:
+          fetch-depth: 0
+          lfs: true
+      
+      - name: Push to Hugging Face Hub
+        env:
+          HF_TOKEN: ${{ secrets.HF_TOKEN }}
+          # Update these to match your actual Hugging Face profile username and Space name
+          HF_USERNAME: "YOUR_HUGGINGFACE_USERNAME" 
+          HF_SPACE_NAME: "YOUR_HUGGINGFACE_SPACE_NAME"
+        run: |
+          git push --force https://$HF_USERNAME:$HF_TOKEN@huggingface.co/spaces/$HF_USERNAME/$HF_SPACE_NAME main
