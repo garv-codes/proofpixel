@@ -49,6 +49,8 @@ class AnalyzeResponse(BaseModel):
     image_hash: str             # SHA-256 hex digest
     processing_time_ms: int     # Server-side time in milliseconds
     is_ai_generated: bool       # True → AI-generated
+    ela_image: str              # Base64 encoded ELA visual map
+    fft_image: str              # Base64 encoded FFT visual map
 
 
 class ScanRecord(BaseModel):
@@ -152,7 +154,7 @@ async def analyze_image(
     # ------------------------------------------------------------------
     start_time = time.perf_counter()
     try:
-        ai_probability, verdict = predict_image(image_bytes)
+        ai_probability, verdict, ela_image, fft_image = predict_image(image_bytes)
     except ValueError as exc:
         raise HTTPException(status_code=422, detail=str(exc))
     elapsed_ms = int((time.perf_counter() - start_time) * 1000)
@@ -182,6 +184,8 @@ async def analyze_image(
         image_hash=image_hash,
         processing_time_ms=elapsed_ms,
         is_ai_generated=verdict,
+        ela_image=ela_image,
+        fft_image=fft_image,
     )
 
 

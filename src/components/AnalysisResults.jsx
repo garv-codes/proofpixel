@@ -18,20 +18,21 @@
  *   @param {() => void} onNewScan — Callback to reset to IDLE state
  */
 
-import { ShieldCheck, ShieldAlert, AlertTriangle, RotateCcw } from "lucide-react";
+import { ShieldCheck, ShieldAlert, AlertTriangle, RotateCcw, Info } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { ConfidenceRing } from "@/components/ConfidenceRing";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 
 export function AnalysisResults({ result, onNewScan }) {
     const isReal = result.label === "Real";
 
     return (
-        <div className="space-y-6 animate-fade-in">
+        <div className="space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-500">
             {/* ── Verdict Card ────────────────────────────────────── */}
             <div
                 className={`rounded-xl border p-6 md:p-8 ${isReal
-                        ? "border-emerald-500/30 bg-emerald-500/5 glow-green"
-                        : "border-rose-500/30 bg-rose-500/5 glow-red"
+                    ? "border-emerald-500/30 bg-emerald-500/5 glow-green"
+                    : "border-rose-500/30 bg-rose-500/5 glow-red"
                     }`}
             >
                 <div className="flex flex-col items-center gap-5">
@@ -39,8 +40,8 @@ export function AnalysisResults({ result, onNewScan }) {
                     <div className="md:hidden text-center">
                         <span
                             className={`text-7xl font-mono font-black tracking-tighter ${isReal
-                                    ? "text-emerald-400 text-glow-green"
-                                    : "text-rose-400 text-glow-red"
+                                ? "text-emerald-400 text-glow-green"
+                                : "text-rose-400 text-glow-red"
                                 }`}
                         >
                             {result.confidence.toFixed(0)}%
@@ -73,23 +74,76 @@ export function AnalysisResults({ result, onNewScan }) {
                     </div>
 
                     {/* Probabilistic disclaimer */}
-                    <div className="flex items-center gap-2 text-xs text-slate-500 font-mono">
-                        <AlertTriangle className="h-3 w-3" />
-                        Analysis is probabilistic — verify with additional methods
+                    <div className="flex items-center gap-2 text-xs text-slate-500 font-mono text-center max-w-sm mx-auto leading-relaxed mt-2">
+                        <AlertTriangle className="h-4 w-4 shrink-0" />
+                        Analysis is probabilistic — verify with additional methods.
                     </div>
                 </div>
             </div>
 
+            {/* ── Forensic Breakdown Grid (XAI Maps) ──────────────── */}
+            {result.ela_image && result.fft_image && (
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 animate-in fade-in slide-in-from-bottom-4 duration-700 delay-300 fill-mode-both">
+                    {/* ELA Card */}
+                    <div className="rounded-xl border border-slate-700/50 bg-slate-900/50 p-4 flex flex-col">
+                        <div className="flex justify-between items-center mb-3">
+                            <span className="text-sm font-semibold text-slate-200 font-mono">Error Level Analysis</span>
+                            <TooltipProvider>
+                                <Tooltip delayDuration={200}>
+                                    <TooltipTrigger asChild>
+                                        <button type="button" className="focus:outline-none">
+                                            <Info className="h-4 w-4 text-slate-400 hover:text-slate-200 transition-colors" />
+                                        </button>
+                                    </TooltipTrigger>
+                                    <TooltipContent side="top" className="max-w-[250px] bg-slate-800 border-slate-700 text-slate-200">
+                                        <p className="text-xs">Highlights areas with inconsistent compression, often indicating digital manipulation.</p>
+                                    </TooltipContent>
+                                </Tooltip>
+                            </TooltipProvider>
+                        </div>
+                        <div className="rounded-lg overflow-hidden bg-black/80 aspect-square flex items-center justify-center relative group flex-1">
+                            <img src={result.ela_image} alt="Error Level Analysis Map" className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110" />
+                            <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+                        </div>
+                    </div>
+
+                    {/* FFT Card */}
+                    <div className="rounded-xl border border-slate-700/50 bg-slate-900/50 p-4 flex flex-col">
+                        <div className="flex justify-between items-center mb-3">
+                            <span className="text-sm font-semibold text-slate-200 font-mono">Frequency Spectrum</span>
+                            <TooltipProvider>
+                                <Tooltip delayDuration={200}>
+                                    <TooltipTrigger asChild>
+                                        <button type="button" className="focus:outline-none">
+                                            <Info className="h-4 w-4 text-slate-400 hover:text-slate-200 transition-colors" />
+                                        </button>
+                                    </TooltipTrigger>
+                                    <TooltipContent side="top" className="max-w-[250px] bg-slate-800 border-slate-700 text-slate-200">
+                                        <p className="text-xs">Analyzes pixel patterns in the frequency domain to find artificial checkerboard artifacts.</p>
+                                    </TooltipContent>
+                                </Tooltip>
+                            </TooltipProvider>
+                        </div>
+                        <div className="rounded-lg overflow-hidden bg-black/80 aspect-square flex items-center justify-center relative group flex-1">
+                            <img src={result.fft_image} alt="Frequency Spectrum Map" className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110" />
+                            <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+                        </div>
+                    </div>
+                </div>
+            )}
+
             {/* ── New Scan CTA ────────────────────────────────────── */}
-            <Button
-                variant="neon-outline"
-                size="lg"
-                className="w-full font-mono text-sm min-h-[48px] hover:scale-105 transition-all duration-200"
-                onClick={onNewScan}
-            >
-                <RotateCcw className="h-4 w-4 mr-2" />
-                Start New Scan
-            </Button>
+            <div className="pt-2 animate-in fade-in slide-in-from-bottom-2 duration-700 delay-500 fill-mode-both">
+                <Button
+                    variant="neon-outline"
+                    size="lg"
+                    className="w-full font-mono text-sm min-h-[48px] hover:scale-[1.02] transition-all duration-300"
+                    onClick={onNewScan}
+                >
+                    <RotateCcw className="h-4 w-4 mr-2" />
+                    Start New Scan
+                </Button>
+            </div>
         </div>
     );
 }

@@ -23,6 +23,7 @@ import io
 import logging
 import os
 import tempfile
+import base64
 from pathlib import Path
 from typing import Tuple
 
@@ -379,7 +380,47 @@ def extract_all_features(image_bytes: bytes) -> np.ndarray:
 # PREDICTION
 # ===========================================================================
 
-def predict_image(image_bytes: bytes) -> Tuple[float, bool]:
+def _encode_to_base64_img(img: np.ndarray) -> str:
+    """Encode an OpenCV image to base64 JPEG, resizing if larger than max_dim."""
+    h, w = img.shape[:2]
+    max_dim = 256
+    if max(h, w) > max_dim:
+        scale = max_dim / max(h, w)
+        img = cv2.resize(img, (int(w * scale), int(h * scale)), interpolation=cv2.INTER_AREA)
+        
+    _, buffer = cv2.imencode('.jpg', img, [cv2.IMWRITE_JPEG_QUALITY, 85])
+    b64_str = base64.b64encode(buffer).decode('utf-8')
+    return f"data:image/jpeg;base64,{b64_str}"
+
+def generate_xai_maps(image_bytes: bytes) -> Tuple[str, str]:
+    """
+    Generate Explainable AI visuals for ELA and FFT.
+    Returns: (ela_base64, fft_base64)
+    """
+    np_arr = np.frombuffer(image_bytes, dtype=np.uint8)
+    img_bgr = cv2.imdecode(np_arr, cv2.IMREAD_COLOR)
+    if img_bgr is None:
+        return "", ""
+
+    # 1. Generate ELA visual
+    encode_params = [cv2.IMWRITE_JPEG_QUALITY, 90]
+    _, encoded = cv2.imencode(".jpg", img_bgr, encode_params)
+    recompressed = cv2.imdecode(encoded, cv2.IMREAD_COLOR)
+    ela = cv2.absdiff(img_bgr, recompressed).astype(np.float32)
+    ela_scaled = ela * 15.0  # boost for visual impact
+    ela_vis = ela_scaled.clip(0, 255).astype(np.uint8)
+
+    # 2. Generate FFT visual
+    gray = cv2.cvtColor(img_bgr, cv2.COLOR_BGR2GRAY)
+    f_transform = np.fft.fft2(gray.astype(np.float64))
+    f_shift = np.fft.fftshift(f_transform)
+    magnitude = np.log1p(np.abs(f_shift))
+    mag_normalized = cv2.normalize(magnitude, None, 0, 255, cv2.NORM_MINMAX, dtype=cv2.CV_8U)
+    fft_vis = cv2.applyColorMap(mag_normalized, cv2.COLORMAP_VIRIDIS)
+    
+    return _encode_to_base64_img(ela_vis), _encode_to_base64_img(fft_vis)
+
+def predict_image(image_bytes: bytes) -> Tuple[float, bool, str, str]:
     """
     Run the full multi-feature inference pipeline.
 
@@ -387,14 +428,17 @@ def predict_image(image_bytes: bytes) -> Tuple[float, bool]:
         1. Extract ELA, FFT, Statistical, and HOG features.
         2. Concatenate into a single vector.
         3. Classify with the trained model.
+        4. Generate XAI maps (base64) for frontend.
 
     Args:
         image_bytes: Raw bytes of the uploaded image.
 
     Returns:
-        (probability, verdict):
+        (probability, verdict, ela_image, fft_image):
         - probability: confidence score 0.0–100.0
         - verdict: True → AI-generated, False → Real
+        - ela_image: base64 data URI
+        - fft_image: base64 data URI
     """
     # Extract all features
     features = extract_all_features(image_bytes)
@@ -411,10 +455,13 @@ def predict_image(image_bytes: bytes) -> Tuple[float, bool]:
         ai_probability = float(np.random.uniform(10.0, 95.0))
 
     verdict: bool = ai_probability >= 50.0
+    
+    # Generate XAI maps for frontend
+    ela_base64, fft_base64 = generate_xai_maps(image_bytes)
 
     logger.info(
         "Prediction: prob=%.2f%%, verdict=%s",
         ai_probability,
         "AI" if verdict else "Real",
     )
-    return ai_probability, verdict
+    return ai_probability, verdict, ela_base64, fft_base64
