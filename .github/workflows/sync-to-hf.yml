@@ -23,4 +23,5 @@ jobs:
           HF_USERNAME: "Garv-codes" 
           HF_SPACE_NAME: "ProofPixel"
         run: |
+          git config lfs.allowincompletepush true
           git push --force https://$HF_USERNAME:$HF_TOKEN@huggingface.co/spaces/$HF_USERNAME/$HF_SPACE_NAME main
