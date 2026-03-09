@@ -8,8 +8,7 @@ pinned: false
 ---
 
 <div align="center">
-  <img src="public/logo.png" alt="ProofPixel Logo" width="150" />
-  <h1>ProofPixel — AI Image Forensics</h1>
+  <h1>🛡️ ProofPixel — AI Image Forensics</h1>
   <p><strong>A Forensic Engine for Detecting AI-Generated Images via Hybrid Machine Learning</strong></p>
   
   <p>

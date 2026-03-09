@@ -25,9 +25,8 @@ export default function LandingPage() {
 
             {/* Navbar */}
             <nav className="w-full relative z-10 px-6 py-6 flex justify-between items-center max-w-7xl mx-auto">
-                <div className="flex items-center gap-3">
-                    <img src="/logo.png" alt="ProofPixel Logo" className="h-10 w-10 object-contain drop-shadow-[0_0_15px_rgba(16,185,129,0.4)] transition-transform hover:scale-110" />
-                    <span className="font-mono text-2xl font-bold tracking-tight">ProofPixel</span>
+                <div className="flex items-center gap-2">
+                    <span className="font-mono text-xl font-bold tracking-tight text-white">🛡️ ProofPixel</span>
                 </div>
                 <div className="flex items-center gap-4">
                     <Link to="/login">

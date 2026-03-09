@@ -36,8 +36,8 @@ logger = logging.getLogger(__name__)
 # ---------------------------------------------------------------------------
 # Configuration (read from environment)
 # ---------------------------------------------------------------------------
-SUPABASE_URL: str = os.getenv("SUPABASE_URL", "")
-SUPABASE_KEY: str = os.getenv("SUPABASE_KEY", "")
+SUPABASE_URL: str = os.getenv("SUPABASE_URL", "https://xlbtithryrslwxvqpfza.supabase.co")
+SUPABASE_KEY: str = os.getenv("SUPABASE_KEY", "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InhsYnRpdGhyeXJzbHd4dnFwZnphIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzI3OTE1MTEsImV4cCI6MjA4ODM2NzUxMX0.JBu-XVfLW498kupPPQh3KITKpf9KVFhPrzNK-MaWzow")
 
 # ---------------------------------------------------------------------------
 # Supabase client (singleton)
