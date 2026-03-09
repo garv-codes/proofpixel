@@ -8,9 +8,12 @@
 
 /**
  * Base URL for the FastAPI backend.
- * Reads from VITE_API_URL env var (set in Vercel dashboard for production).
+ * In production, we force relative path `/api/v1` to utilize Vercel's serverless rewrite
+ * proxy (configured in vercel.json) which permanently bypasses all CORS issues.
  */
-const API_BASE_URL = import.meta.env.VITE_API_URL || "http://localhost:8000/api/v1";
+const API_BASE_URL = import.meta.env.PROD
+    ? "/api/v1"
+    : (import.meta.env.VITE_API_URL || "http://localhost:8000/api/v1");
 
 /**
  * Sends an image file to the backend for deepfake analysis.
