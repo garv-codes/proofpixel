@@ -57,9 +57,7 @@ export default function LoginPage() {
             <div className="w-full max-w-md">
                 {/* ── Brand Header ───────────────────────────── */}
                 <div className="text-center mb-8">
-                    <div className="inline-flex items-center justify-center p-2 rounded-2xl bg-emerald-500/10 glow-green mb-4">
-                        <img src="/logo.png" alt="ProofPixel Logo" className="h-12 w-12 object-contain" />
-                    </div>
+                    <img src="/logo.png" alt="ProofPixel Logo" className="mx-auto h-20 w-20 object-contain drop-shadow-[0_0_20px_rgba(16,185,129,0.6)] mb-6" />
                     <h1 className="text-2xl font-mono font-bold text-white tracking-wider">
                         PROOFPIXEL
                     </h1>
