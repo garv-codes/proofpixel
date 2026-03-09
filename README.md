@@ -6,28 +6,66 @@ colorTo: indigo
 sdk: docker
 pinned: false
 ---
+
 <div align="center">
   <img src="public/logo.png" alt="ProofPixel Logo" width="150" />
-  <h1>ProofPixel</h1> — AI Image Forensics
+  <h1>ProofPixel — AI Image Forensics</h1>
+  <p><strong>A Forensic Engine for Detecting AI-Generated Images via Hybrid Machine Learning</strong></p>
+  
+  <p>
+    <img src="https://img.shields.io/badge/Python-3.9+-blue.svg?style=for-the-badge&logo=python&logoColor=white" alt="Python" />
+    <img src="https://img.shields.io/badge/React-18-61DAFB.svg?style=for-the-badge&logo=react&logoColor=black" alt="React" />
+    <img src="https://img.shields.io/badge/FastAPI-0.110+-009688.svg?style=for-the-badge&logo=fastapi&logoColor=white" alt="FastAPI" />
+    <img src="https://img.shields.io/badge/scikit--learn-1.4+-F7931E.svg?style=for-the-badge&logo=scikit-learn&logoColor=white" alt="Scikit-Learn" />
+  </p>
 </div>
 
-A production-grade deepfake detection platform that analyzes images for AI-generated artifacts using computer vision and machine learning. Built with a React frontend, FastAPI backend, and a Random Forest classifier trained on HOG features.
+ProofPixel is a production-grade forensic tool designed to combat digital misinformation by detecting AI-generated images. It utilizes a sophisticated hybrid machine learning pipeline to analyze visual artifacts across multiple domains, providing users with real-time, explainable intelligence.
 
-> **Live Demo:** [proofpixel.vercel.app](https://proofpixel.vercel.app) · **API:** [proofpixel.onrender.com](https://proofpixel.onrender.com)
-
----
-
-## ✨ Features
-
-- **AI Detection** — Upload any image for instant deepfake analysis via HOG + Random Forest
-- **Supabase Auth** — Email/password authentication with session persistence
-- **Scan History** — User-scoped history panel showing past analyses with verdict badges
-- **Modern UI** — Dark cybersecurity theme with glassmorphism effects and Tailwind animations
-- **Responsive** — Two-column desktop layout (analyzer + history) with stacked mobile view
+> **Live Demo:** [proofpixel.vercel.app](https://proofpixel.vercel.app) · **API:** [garv-codes-proofpixel.hf.space](https://garv-codes-proofpixel.hf.space)
 
 ---
 
-## 🏗️ Tech Stack
+## ✨ Key Features
+
+- **Real-Time Analysis**: Instantly classify images as real or AI-generated with low latency.
+- **Explainable AI (XAI) Forensic Maps**: Go beyond binary verdicts. ProofPixel generates visual forensic maps (ELA and FFT) to highlight the exact regions and frequencies that triggered the AI detector.
+- **High Accuracy**: Achieves a **90.0% Test Accuracy** across diverse generator topologies (GANs, Diffusion Models).
+- **Supabase Auth**: Email/password authentication with session persistence.
+- **Scan History**: User-scoped history panel showing past analyses with verdict badges.
+
+---
+
+## 🧠 Core Architecture: Multi-Feature Fusion Pipeline
+
+ProofPixel moves beyond simple pixel-level CNNs by employing a **Multi-Feature Fusion** pipeline. This approach extracts mathematical inconsistencies unique to AI image synthesis targeting three distinct forensic domains:
+
+1. **ELA (Error Level Analysis)**
+   * **Mechanism**: Compresses the image at a known quality level and computes the residual difference.
+   * **Purpose**: Identifies compression inconsistencies. AI-generated images or spliced regions often exhibit irregular compression signatures compared to natural camera photographs.
+2. **FFT (Fast Fourier Transform)**
+   * **Mechanism**: Maps the spatial image into the frequency domain.
+   * **Purpose**: Detects high-frequency artifacts. Convolutional upsampling (common in GANs and Diffusion models) frequently leaves unnatural periodic frequencies that are invisible to the human eye but glaringly apparent in the FFT power spectrum.
+3. **Pixel Statistics & HOG (Histogram of Oriented Gradients)**
+   * **Mechanism**: Extracts structural gradients and local texture variations.
+   * **Purpose**: Captures unnatural smoothness or hyper-regular edge alignments characteristic of synthetic generation.
+
+### Model Specifications
+- **Algorithm**: `RandomForestClassifier` (optimized for multi-dimensional feature variance).
+- **Training Data**: Trained on a massive, highly-diversified dataset of **32,000 images** curated from the CIFAKE and AI-vs-Real corpuses.
+- **Performance**: Validated on holdout sets, achieving a robust **90.0% overall accuracy**.
+
+---
+
+## 💻 User Interface
+
+The frontend is built with **React** and **Tailwind CSS**, delivering a highly polished, responsive, and intuitive "cyber-forensic" aesthetic.
+- **XAI Integration**: The results dashboard dynamically renders the backend-generated ELA and FFT Base64 maps alongside the authenticity score, transforming a black-box ML prediction into an auditable forensic breakdown.
+- **Modern UI**: Dark cybersecurity theme with glassmorphism effects and Tailwind animations.
+
+---
+
+## 🛠️ Tech Stack
 
 | Layer     | Technology                                            |
 | --------- | ----------------------------------------------------- |
@@ -36,7 +74,7 @@ A production-grade deepfake detection platform that analyzes images for AI-gener
 | ML        | OpenCV, scikit-image (HOG), scikit-learn (Random Forest) |
 | Auth      | Supabase (GoTrue)                                     |
 | Database  | Supabase (PostgreSQL)                                 |
-| Hosting   | Vercel (frontend), Render (backend)                   |
+| Hosting   | Vercel (frontend), Hugging Face Spaces (backend)      |
 
 ---
 
@@ -45,7 +83,7 @@ A production-grade deepfake detection platform that analyzes images for AI-gener
 ### Prerequisites
 
 - Node.js 18+ and npm
-- Python 3.10+ and pip
+- Python 3.9+ and pip
 - A [Supabase](https://supabase.com) project
 
 ### 1. Clone & Install
@@ -58,6 +96,8 @@ cd proofpixel
 npm install
 
 # Backend
+python -m venv .venv
+source .venv/bin/activate  # Or `.venv\Scripts\activate` on Windows
 pip install -r requirements.txt
 ```
 
@@ -104,47 +144,6 @@ npm run dev                      # http://localhost:5173
 
 ---
 
-## 🤖 ML Pipeline
-
-### How It Works
-
-```
-Image Upload → Resize (128×128) → Grayscale → HOG Features (8100-dim) → Random Forest → Verdict
-```
-
-1. **Preprocessing** — Resize to 128×128, convert to grayscale
-2. **Feature Extraction** — Histogram of Oriented Gradients (HOG) with 9 orientations, 8×8 pixel cells, 2×2 block normalization
-3. **Classification** — Random Forest (50 trees, max depth 20) trained on combined CIFAKE + AI-vs-Real datasets
-4. **Result** — Probability score (0–100%) and binary verdict (Real / AI-Generated)
-
-### Training the Model
-
-The model is pre-trained and included as `model.joblib`. To retrain:
-
-```bash
-# Download datasets from Kaggle:
-# 1. https://www.kaggle.com/datasets/birdy654/cifake-real-and-ai-generated-synthetic-images
-# 2. https://www.kaggle.com/datasets/swati6945/ai-generated-vs-real-images
-
-# Train with both datasets combined
-python train_model.py \
-    --dataset ./cifake \
-    --dataset ./ai-vs-real \
-    --max-per-class 5000 \
-    --n-estimators 50 \
-    --max-depth 20
-```
-
-| Parameter | Default | Description |
-|-----------|---------|-------------|
-| `--dataset` | required | Path(s) to dataset dirs (repeatable) |
-| `--max-per-class` | 10000 | Max images per class per dataset (0 = all) |
-| `--n-estimators` | 200 | Number of trees in the forest |
-| `--max-depth` | None | Max tree depth (None = unlimited) |
-| `--n-jobs` | -1 | Parallel threads (-1 = all cores) |
-
----
-
 ## 📁 Project Structure
 
 ```
@@ -177,7 +176,6 @@ proofpixel/
 ├── model.joblib                  # Pre-trained Random Forest model (Git LFS)
 ├── requirements.txt              # Python dependencies
 ├── vercel.json                   # Vercel SPA rewrite config
-├── render.yaml                   # Render deployment blueprint
 └── package.json                  # Node.js dependencies & scripts
 ```
 
@@ -187,23 +185,19 @@ proofpixel/
 
 ### Frontend (Vercel)
 
-1. Connect your GitHub repo to [Vercel](https://vercel.com)
+1. Connect your GitHub repo to [Vercel](https://vercel.com).
 2. Set environment variables in Vercel Dashboard → Settings → Environment Variables:
    - `VITE_SUPABASE_URL`
    - `VITE_SUPABASE_ANON_KEY`
-   - `VITE_API_URL` = `https://proofpixel.onrender.com/api/v1`
-3. Deploy — Vercel auto-builds on every push
+   - `VITE_API_URL` = `https://garv-codes-proofpixel.hf.space/api/v1`
+3. Deploy — Vercel auto-builds on every push.
 
-### Backend (Render)
+### Backend (Hugging Face Spaces)
 
-1. Connect your GitHub repo to [Render](https://render.com)
-2. Create a **Web Service** with:
-   - **Build Command:** `pip install -r requirements.txt`
-   - **Start Command:** `uvicorn main:app --host 0.0.0.0 --port $PORT`
-3. Set environment variables: `SUPABASE_URL`, `SUPABASE_KEY`
-4. Deploy
-
-> **Note:** The free tier has 512 MB RAM. The model is optimized at ~6 MB to fit within this limit.
+1. Create a new **Docker Space** on [Hugging Face](https://huggingface.co/spaces).
+2. The repository includes an automated GitHub Actions workflow (`.github/workflows/sync-to-hf.yml`) that pushes directly to the Space.
+3. Add your `HF_TOKEN`, `HF_USERNAME`, and `HF_SPACE_NAME` to your GitHub Repository Secrets.
+4. Set the `SUPABASE_URL` and `SUPABASE_KEY` secrets within the Hugging Face Space settings.
 
 ---
 
@@ -225,7 +219,9 @@ Upload an image for deepfake analysis.
     "confidence": 23.45,
     "image_hash": "a1b2c3...",
     "processing_time_ms": 142,
-    "is_ai_generated": false
+    "is_ai_generated": false,
+    "ela_image": "base64...",
+    "fft_image": "base64..."
 }
 ```
 
@@ -237,6 +233,10 @@ Fetch recent scan history for a user.
 |-----------|------|----------|-------------|
 | `user_id` | string | query | Supabase user UUID |
 | `limit` | int | query | Max results (1–50, default 10) |
+
+### `DELETE /api/v1/scans`
+
+Clear your personal scan history logs.
 
 ---
 
@@ -250,6 +250,14 @@ LoginPage → Supabase Auth → AuthContext (onAuthStateChange) → ProtectedRou
 - **Sign In** — JWT session stored in localStorage by Supabase client
 - **Session Sync** — `onAuthStateChange` listener keeps state in sync across tabs
 - **Sign Out** — Clears session, redirects to `/login`
+
+---
+
+## 🙏 Acknowledgments
+
+The machine learning models driving ProofPixel were significantly accelerated by the incredible open-source datasets provided by the Kaggle data science community:
+- [CIFAKE: Real and AI-Generated Synthetic Images](https://www.kaggle.com/datasets/birdy654/cifake-real-and-ai-generated-synthetic-images)
+- [AI Generated vs Real Images](https://www.kaggle.com/datasets/swati6945/ai-generated-vs-real-images)
 
 ---
 
