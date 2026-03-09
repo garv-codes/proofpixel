@@ -1,29 +1,25 @@
-FROM python:3.9
+FROM python:3.10-slim
 
-# Install system dependencies
-RUN apt-get update && apt-get install -y \
-    libgl1-mesa-glx \
-    libglib2.0-0 \
-    && rm -rf /var/lib/apt/lists/*
+WORKDIR /code
+
+COPY ./requirements.txt /code/requirements.txt
+
+# Install dependencies as root to avoid permission/build failures
+RUN pip install --no-cache-dir --upgrade -r /code/requirements.txt
 
 # Set up a new user named "user" with user ID 1000
 RUN useradd -m -u 1000 user
 USER user
+
+# Set home to the user's home directory
 ENV HOME=/home/user \
     PATH=/home/user/.local/bin:$PATH
 
 WORKDIR $HOME/app
 
-# Copy the requirements and install them securely
-COPY --chown=user requirements.txt $HOME/app/
-RUN pip install --no-cache-dir --upgrade pip
-RUN pip install --no-cache-dir -r requirements.txt
+# Copy the rest of the application files securely
+COPY --chown=user . $HOME/app
 
-# Copy the rest of the application
-COPY --chown=user . $HOME/app/
-
-# Expose port 7860 for Hugging Face Spaces
 EXPOSE 7860
 
-# Command to run the application
 CMD ["uvicorn", "main:app", "--host", "0.0.0.0", "--port", "7860"]
