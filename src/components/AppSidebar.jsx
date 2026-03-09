@@ -24,8 +24,8 @@ export function AppSidebar() {
             {/* ── Brand Header ────────────────────────────────── */}
             <div className="p-6 border-b border-slate-800">
                 <div className="flex items-center gap-3">
-                    <div className="p-2 rounded-lg bg-emerald-500/10 glow-green">
-                        <Shield className="h-6 w-6 text-emerald-400" />
+                    <div className="p-1 rounded-lg bg-emerald-500/10 glow-green">
+                        <img src="/logo.png" alt="ProofPixel Logo" className="h-8 w-8 object-contain" />
                     </div>
                     <div>
                         <h1 className="font-mono font-bold text-white text-sm tracking-wider">

@@ -6,8 +6,10 @@ colorTo: indigo
 sdk: docker
 pinned: false
 ---
-
-# 🛡️ ProofPixel — AI Image Forensics
+<div align="center">
+  <img src="public/logo.png" alt="ProofPixel Logo" width="150" />
+  <h1>ProofPixel</h1> — AI Image Forensics
+</div>
 
 A production-grade deepfake detection platform that analyzes images for AI-generated artifacts using computer vision and machine learning. Built with a React frontend, FastAPI backend, and a Random Forest classifier trained on HOG features.
 

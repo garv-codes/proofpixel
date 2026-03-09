@@ -13,8 +13,8 @@ export function TopBar() {
         <header className="sticky top-0 z-40 flex items-center justify-between px-4 h-14 border-b border-slate-800 bg-slate-950/95 backdrop-blur-md md:hidden">
             {/* Brand mark */}
             <div className="flex items-center gap-3">
-                <div className="p-1.5 rounded-lg bg-emerald-500/10 glow-green">
-                    <Shield className="h-5 w-5 text-emerald-400" />
+                <div className="p-1 rounded-lg bg-emerald-500/10 glow-green">
+                    <img src="/logo.png" alt="ProofPixel Logo" className="h-6 w-6 object-contain" />
                 </div>
                 <div>
                     <h1 className="font-mono font-bold text-white text-xs tracking-wider">
