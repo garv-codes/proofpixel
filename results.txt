@@ -1,0 +1,15 @@
+--- File: cifake/test/REAL/0000 (10).jpg ---
+Expected: REAL (0)
+Prediction: 0 (1=FAKE, 0=REAL)
+Probabilities: 0/REAL:0.6267, 1/FAKE:0.3733
+
+--- File: cifake/test/FAKE/0 (10).jpg ---
+Expected: FAKE (1)
+Prediction: 1 (1=FAKE, 0=REAL)
+Probabilities: 0/REAL:0.0733, 1/FAKE:0.9267
+
+--- File: landscapes/REAL\ALWB4121.JPG ---
+Expected: REAL (0)
+Prediction: 1 (1=FAKE, 0=REAL)
+Probabilities: 0/REAL:0.4267, 1/FAKE:0.5733
+
