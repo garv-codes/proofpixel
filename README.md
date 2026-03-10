@@ -258,6 +258,10 @@ The machine learning models driving ProofPixel were significantly accelerated by
 - [CIFAKE: Real and AI-Generated Synthetic Images](https://www.kaggle.com/datasets/birdy654/cifake-real-and-ai-generated-synthetic-images)
 - [AI Generated vs Real Images](https://www.kaggle.com/datasets/swati6945/ai-generated-vs-real-images)
 
+In addition, we deeply appreciate the dataset access provided by the Hugging Face Hub to counteract model bias on real-world scenery:
+- [AI vs Real Image Detection](https://huggingface.co/datasets/Hemg/ai-vs-real-image-detection)
+- [Autotrain Data Real vs Fake](https://huggingface.co/datasets/juliensimon/autotrain-data-real-vs-fake)
+
 ---
 
 ## 📄 License

@@ -2,7 +2,7 @@
  * About Page — Developer profile and tech stack showcase
  */
 
-import { Github, Linkedin, Shield, Milestone, CheckCircle2, CircleDashed } from "lucide-react";
+import { Github, Linkedin, Shield, Milestone, CheckCircle2, CircleDashed, Cpu } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
 const techStack = [
