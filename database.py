@@ -14,7 +14,7 @@ Required columns:
 
 Environment variables (loaded from ``.env``):
     SUPABASE_URL  — Your Supabase project URL
-    SUPABASE_KEY  — Your Supabase anon/service-role key
+    SUPABASE_KEY  — Your Supabase service-role key (required to bypass RLS)
 """
 
 from __future__ import annotations
@@ -94,6 +94,8 @@ def init_db() -> None:
             user_id           TEXT,
             created_at        TIMESTAMPTZ DEFAULT NOW()
         );
+
+        ALTER TABLE scan_logs ENABLE ROW LEVEL SECURITY;
     """
     client = _get_client()
     if client is None:

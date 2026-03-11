@@ -107,7 +107,7 @@ Create a `.env` file in the project root:
 ```env
 # Backend (Python)
 SUPABASE_URL=https://your-project-id.supabase.co
-SUPABASE_KEY=your-anon-key
+SUPABASE_KEY=your-service-role-key
 
 # Frontend (Vite — must have VITE_ prefix)
 VITE_SUPABASE_URL=https://your-project-id.supabase.co
@@ -129,6 +129,8 @@ CREATE TABLE IF NOT EXISTS scan_logs (
     user_id            TEXT,
     created_at         TIMESTAMPTZ DEFAULT NOW()
 );
+
+ALTER TABLE scan_logs ENABLE ROW LEVEL SECURITY;
 ```
 
 ### 4. Run Locally
