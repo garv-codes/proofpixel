@@ -9,11 +9,25 @@ __pycache__
 .next
 build
 
-# Datasets
+# Datasets (too large for Docker image)
 cifake/
 ai-vs-real/
 datasets/
+landscapes/
+faces/
+
+# Hugging Face / training caches
+hf_cache/
+hf_datasets_cache/
 
 # Environments
 .venv/
 venv/
+
+# Test scripts and outputs
+evaluate_model.py
+test_inference.py
+test_api.py
+results.txt
+results_retrained.txt
+test_output.txt

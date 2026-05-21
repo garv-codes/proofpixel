@@ -41,3 +41,19 @@ venv/
 cifake/
 ai-vs-real/
 datasets/
+landscapes/
+faces/
+
+# Hugging Face cache
+hf_cache/
+hf_datasets_cache/
+
+# Scratch / test scripts
+evaluate_model.py
+test_inference.py
+test_api.py
+
+# Test output files
+results.txt
+results_retrained.txt
+test_output.txt
