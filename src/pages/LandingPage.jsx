@@ -41,21 +41,21 @@ export default function LandingPage() {
 
             {/* Hero Section */}
             <main className="flex-1 flex flex-col items-center justify-center relative z-10 px-4 pt-20 pb-32 max-w-5xl mx-auto text-center">
-                <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-zinc-800/80 border border-zinc-700 text-zinc-300 text-xs md:text-sm mb-8 animate-in fade-in slide-in-from-bottom-4 duration-500 flex-wrap justify-center text-center">
+                <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-zinc-800/80 border border-zinc-700 text-zinc-300 text-xs md:text-sm mb-8 flex-wrap justify-center text-center">
                     <Zap className="h-4 w-4 shrink-0 text-indigo-400" />
                     <span>ELA + FFT + HOG → Gradient Boosting Classifier</span>
                 </div>
 
-                <h1 className="text-4xl md:text-7xl font-black tracking-tight mb-8 leading-[1.1] animate-in fade-in slide-in-from-bottom-4 duration-700 delay-150 fill-mode-both">
+                <h1 className="text-4xl md:text-7xl font-black tracking-tight mb-8 leading-[1.1]">
                     Detect AI-Generated <br className="hidden md:block" />
                     Images Instantly
                 </h1>
 
-                <p className="text-lg md:text-xl text-zinc-400 mb-12 max-w-2xl font-light leading-relaxed animate-in fade-in slide-in-from-bottom-4 duration-700 delay-300 fill-mode-both">
+                <p className="text-lg md:text-xl text-zinc-400 mb-12 max-w-2xl font-light leading-relaxed">
                     Upload any image. ProofPixel checks compression artifacts (ELA), frequency patterns (FFT), and structural edges (HOG), then runs a Gradient Boosting classifier to determine if it's real or AI-generated.
                 </p>
 
-                <div className="animate-in fade-in slide-in-from-bottom-4 duration-700 delay-500 fill-mode-both">
+                <div>
                     <Link to="/login">
                         <Button size="lg" className="bg-indigo-500 hover:bg-indigo-400 text-white font-semibold text-lg px-8 h-14 rounded-full transition-all hover:scale-105">
                             Start Analyzing Free
@@ -151,9 +151,9 @@ export default function LandingPage() {
     );
 }
 
-function FeatureCard({ icon, title, description, delay }) {
+function FeatureCard({ icon, title, description }) {
     return (
-        <div className={`flex flex-col items-center text-center p-8 rounded-2xl bg-zinc-900/50 border border-zinc-800 hover:bg-zinc-800/50 hover:border-zinc-700 transition-colors animate-in fade-in slide-in-from-bottom-8 duration-700 fill-mode-both ${delay}`}>
+        <div className="flex flex-col items-center text-center p-6 rounded-2xl bg-zinc-900/50 border border-zinc-800 hover:bg-zinc-800/50 hover:border-zinc-700 transition-colors">
             <div className="h-16 w-16 rounded-full bg-zinc-800 flex items-center justify-center mb-6">
                 {icon}
             </div>

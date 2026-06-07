@@ -85,7 +85,7 @@ export default function Architecture() {
 
                     <div className="space-y-8">
                         {steps.map((step) => (
-                            <div key={step.num} className="relative animate-fade-in">
+                            <div key={step.num} className="relative">
                                 {/* Timeline node */}
                                 <div className="absolute -left-7 md:-left-9 lg:-left-13 top-6 flex items-center justify-center">
                                     <div className="h-6 w-6 rounded-full bg-zinc-950 border-2 border-indigo-500 flex items-center justify-center">
@@ -94,7 +94,7 @@ export default function Architecture() {
                                 </div>
 
                                 {/* Step card */}
-                                <div className="rounded-xl border border-zinc-800 bg-zinc-900/50 p-4 md:p-6 space-y-4 hover:border-zinc-700 hover:bg-zinc-800/40 transition-all duration-300">
+                                <div className="rounded-xl border border-zinc-800 bg-zinc-900/50 p-4 space-y-4 hover:border-zinc-700 hover:bg-zinc-800/40 transition-colors">
                                     <div className="flex items-center gap-3">
                                         <div className="p-2.5 rounded-lg bg-indigo-500/10">
                                             <step.icon className="h-5 w-5 text-indigo-400" />
@@ -125,7 +125,7 @@ export default function Architecture() {
 
                 {/* Glossary Column */}
                 <div className="lg:col-span-4">
-                    <div className="sticky top-24 rounded-2xl border border-zinc-800 bg-zinc-900/50 p-6 space-y-6">
+                    <div className="sticky top-24 rounded-2xl border border-zinc-800 bg-zinc-900/50 p-5 space-y-6">
                         <div className="flex items-center gap-2 pb-4 border-b border-zinc-800">
                             <BookOpen className="h-5 w-5 text-indigo-400" />
                             <h2 className="text-lg font-bold text-white tracking-wider uppercase">

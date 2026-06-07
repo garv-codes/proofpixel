@@ -127,41 +127,7 @@ export default function Analyzer() {
                     <>
                         <UploadZone onFileSelected={handleFileSelected} />
 
-                        {/* Deepfake Detection Tips */}
-                        <div className="mt-8 pt-8 border-t border-zinc-800/50">
-                            <div className="flex items-center gap-2 mb-6">
-                                <Lightbulb className="h-5 w-5 text-indigo-400" />
-                                <h2 className="text-lg font-mono font-bold text-white tracking-tight">
-                                    Deepfake Detection Tips
-                                </h2>
-                            </div>
-                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                <div className="p-4 rounded-xl bg-zinc-900/50 border border-zinc-800 text-sm">
-                                    <h3 className="font-semibold text-zinc-200 mb-2 truncate">Asymmetrical Lighting</h3>
-                                    <p className="text-zinc-400 leading-relaxed text-xs">
-                                        Check if shadows align with the light sources. AI often struggles with global illumination consistency.
-                                    </p>
-                                </div>
-                                <div className="p-4 rounded-xl bg-zinc-900/50 border border-zinc-800 text-sm">
-                                    <h3 className="font-semibold text-zinc-200 mb-2 truncate">Unnatural Textures</h3>
-                                    <p className="text-zinc-400 leading-relaxed text-xs">
-                                        Look closely at skin, hair, and clothing. AI models frequently blur details or create repetitive patterns.
-                                    </p>
-                                </div>
-                                <div className="p-4 rounded-xl bg-zinc-900/50 border border-zinc-800 text-sm">
-                                    <h3 className="font-semibold text-zinc-200 mb-2 truncate">Distorted Backgrounds</h3>
-                                    <p className="text-zinc-400 leading-relaxed text-xs">
-                                        AI focuses on the main subject. Background objects, text, and straight lines are often warped or illegible.
-                                    </p>
-                                </div>
-                                <div className="p-4 rounded-xl bg-zinc-900/50 border border-zinc-800 text-sm">
-                                    <h3 className="font-semibold text-zinc-200 mb-2 truncate">Weird Hands & Teeth</h3>
-                                    <p className="text-zinc-400 leading-relaxed text-xs">
-                                        Generators have trouble with complex anatomy. Look for extra fingers, blended teeth, or structural impossible geometry.
-                                    </p>
-                                </div>
-                            </div>
-                        </div>
+
                     </>
                 )}
 
