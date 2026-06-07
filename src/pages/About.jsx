@@ -15,7 +15,7 @@ export default function About() {
         <div className="max-w-5xl mx-auto animate-fade-in grid grid-cols-1 md:grid-cols-2 gap-8 lg:gap-12">
             {/* ── Left Column: Profile Card ── */}
             <div className="space-y-6">
-                <div className="rounded-2xl border border-slate-800 bg-slate-900/50 p-8 shadow-xl relative overflow-hidden">
+                <div className="rounded-2xl border border-slate-800 bg-slate-900/50 p-5 md:p-8 shadow-xl relative overflow-hidden">
                     {/* Subtle glow effect behind avatar */}
                     <div className="absolute top-0 left-1/2 -translate-x-1/2 w-48 h-48 bg-emerald-500/10 blur-[50px] rounded-full pointer-events-none" />
                     <div className="flex flex-col items-center text-center space-y-5">
@@ -40,13 +40,13 @@ export default function About() {
 
                         <div className="flex items-center gap-3 pt-1">
                             <Button variant="neon-outline" size="sm" className="hover:scale-105 transition-all duration-200" asChild>
-                                <a href="https://github.com" target="_blank" rel="noopener noreferrer">
+                                <a href="https://github.com/garv-codes" target="_blank" rel="noopener noreferrer">
                                     <Github className="h-4 w-4 mr-2" />
                                     GitHub
                                 </a>
                             </Button>
                             <Button variant="neon-outline" size="sm" className="hover:scale-105 transition-all duration-200" asChild>
-                                <a href="https://linkedin.com" target="_blank" rel="noopener noreferrer">
+                                <a href="https://www.linkedin.com/in/garv-gujral-931a3b246/" target="_blank" rel="noopener noreferrer">
                                     <Linkedin className="h-4 w-4 mr-2" />
                                     LinkedIn
                                 </a>
@@ -75,7 +75,7 @@ export default function About() {
             </div>
 
             {/* ── Right Column: Project Roadmap ── */}
-            <div className="rounded-2xl border border-slate-800 bg-slate-900/30 p-8">
+            <div className="rounded-2xl border border-slate-800 bg-slate-900/30 p-5 md:p-8">
                 <div className="flex items-center gap-2 mb-8 pb-4 border-b border-slate-800/50">
                     <Milestone className="h-5 w-5 text-emerald-400" />
                     <h2 className="text-lg font-mono font-bold text-white tracking-wider">

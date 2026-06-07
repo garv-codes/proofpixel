@@ -64,7 +64,7 @@ export default function LoginPage() {
                         PROOFPIXEL
                     </h1>
                     <p className="text-sm text-slate-500 font-mono mt-1">
-                        AI IMAGE FORENSICS
+                        DEEPFAKE DETECTION
                     </p>
                 </div>
 
@@ -138,7 +138,7 @@ export default function LoginPage() {
                             className="w-full py-3 rounded-lg bg-gradient-to-r from-emerald-500 to-teal-500 text-white font-mono font-semibold text-sm hover:from-emerald-400 hover:to-teal-400 transition-all duration-200 hover:scale-[1.02] active:scale-[0.98] disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100 shadow-lg shadow-emerald-500/20"
                         >
                             {loading
-                                ? "Processing..."
+                                ? "Signing in..."
                                 : isSignUp
                                     ? "Create Account"
                                     : "Sign In"

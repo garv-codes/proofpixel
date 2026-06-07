@@ -91,7 +91,7 @@ export function UploadZone({ onFileSelected }) {
                     </div>
 
                     <p className="text-base font-medium text-slate-200">
-                        {isDragOver ? "Release to analyze" : "Upload an image, and our AI will tell you if it's real or generated."}
+                        {isDragOver ? "Release to start detection" : "Drop an image to check for compression artifacts, frequency anomalies, and structural edge patterns."}
                     </p>
                     <p className="mt-2 text-xs text-slate-500 font-mono">
                         Supports JPG, JPEG, PNG

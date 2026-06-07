@@ -67,10 +67,10 @@ export function HistoryPanel({ userId, refreshKey }) {
                 setScans([]);
                 toast.success("Scan history cleared successfully.");
             } else {
-                toast.error("Failed to clear scan history.");
+                toast.error("Could not clear scan history — the server did not respond.");
             }
         } catch (error) {
-            toast.error("An error occurred while clearing history.");
+            toast.error("Could not reach the server to clear history. Check your connection.");
         } finally {
             setClearing(false);
         }

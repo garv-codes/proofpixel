@@ -49,7 +49,7 @@ export async function analyzeImage(file, userId = null) {
     }
 
     if (!response.ok) {
-        let detail = "An unknown server error occurred.";
+        let detail = "The server could not process this image. It may be corrupted or in an unsupported format.";
         try {
             const body = await response.json();
             detail = body.detail ?? body.message ?? detail;

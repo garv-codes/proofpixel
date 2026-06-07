@@ -69,25 +69,25 @@ export default function Architecture() {
                 </p>
             </div>
 
-            <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-12 pl-2">
+            <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-12 pl-0 md:pl-2">
 
                 {/* ── Timeline Column (Centered relative to its space) ── */}
-                <div className="lg:col-span-8 relative pl-8 lg:pl-12">
+                <div className="lg:col-span-8 relative pl-6 md:pl-8 lg:pl-12">
                     {/* Dashed vertical connector line */}
-                    <div className="absolute left-3 lg:left-7 top-4 bottom-4 w-px border-l-2 border-dashed border-slate-800" />
+                    <div className="absolute left-1 md:left-3 lg:left-7 top-4 bottom-4 w-px border-l-2 border-dashed border-slate-800" />
 
                     <div className="space-y-8">
                         {steps.map((step) => (
                             <div key={step.num} className="relative animate-fade-in">
                                 {/* Timeline node */}
-                                <div className="absolute -left-9 lg:-left-13 top-6 flex items-center justify-center">
+                                <div className="absolute -left-7 md:-left-9 lg:-left-13 top-6 flex items-center justify-center">
                                     <div className="h-6 w-6 rounded-full bg-slate-950 border-2 border-emerald-500 flex items-center justify-center shadow-[0_0_10px_hsl(160_84%_39%/0.4)]">
                                         <div className="h-2 w-2 rounded-full bg-emerald-400" />
                                     </div>
                                 </div>
 
                                 {/* Step card */}
-                                <div className="rounded-xl border border-slate-800 bg-slate-900/50 p-6 space-y-4 hover:border-slate-700 hover:bg-slate-800/40 transition-all duration-300">
+                                <div className="rounded-xl border border-slate-800 bg-slate-900/50 p-4 md:p-6 space-y-4 hover:border-slate-700 hover:bg-slate-800/40 transition-all duration-300">
                                     <div className="flex items-center gap-3">
                                         <div className="p-2.5 rounded-lg bg-emerald-500/10">
                                             <step.icon className="h-5 w-5 text-emerald-400" />

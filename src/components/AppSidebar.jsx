@@ -32,7 +32,7 @@ export function AppSidebar() {
                             PROOFPIXEL
                         </h1>
                         <p className="font-mono text-[10px] text-slate-500 tracking-widest">
-                            AI FORENSICS v1.0
+                            DEEPFAKE DETECTION
                         </p>
                     </div>
                 </div>

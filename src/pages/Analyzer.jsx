@@ -89,7 +89,7 @@ export default function Analyzer() {
         } catch (err) {
             toast({
                 title: "Analysis Failed",
-                description: err.message ?? "An unexpected error occurred.",
+                description: err.message ?? "Upload failed — check that your file is a valid JPEG or PNG and try again.",
                 variant: "destructive",
             });
             setAppState("IDLE");

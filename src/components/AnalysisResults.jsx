@@ -36,17 +36,16 @@ export function AnalysisResults({ result, onNewScan }) {
                     }`}
             >
                 <div className="flex flex-col items-center gap-5">
-                    {/* Mobile: large percentage for quick readability */}
+                    {/* Mobile: prominent combined score + label */}
                     <div className="md:hidden text-center">
                         <span
-                            className={`text-7xl font-mono font-black tracking-tighter ${isReal
+                            className={`text-6xl font-mono font-black tracking-tighter ${isReal
                                 ? "text-emerald-400 text-glow-green"
                                 : "text-rose-400 text-glow-red"
                                 }`}
                         >
-                            {result.confidence.toFixed(0)}%
+                            {result.confidence.toFixed(0)}% {isReal ? "Real" : "Fake"}
                         </span>
-                        <p className="text-xs text-slate-500 font-mono mt-1">CONFIDENCE</p>
                     </div>
 
                     {/* Desktop: animated SVG confidence ring */}
@@ -54,20 +53,20 @@ export function AnalysisResults({ result, onNewScan }) {
                         <ConfidenceRing percentage={result.confidence} isReal={isReal} />
                     </div>
 
-                    {/* Verdict badge */}
+                    {/* Verdict badge — secondary to the score */}
                     <div className="flex items-center gap-3">
                         {isReal ? (
                             <div className="flex items-center gap-2 px-5 py-2.5 rounded-full bg-emerald-500/15 border border-emerald-500/30 glow-green">
                                 <ShieldCheck className="h-5 w-5 text-emerald-400" />
                                 <span className="font-mono font-bold text-sm text-emerald-400 text-glow-green">
-                                    AUTHENTIC
+                                    LIKELY AUTHENTIC
                                 </span>
                             </div>
                         ) : (
                             <div className="flex items-center gap-2 px-5 py-2.5 rounded-full bg-rose-500/15 border border-rose-500/30 glow-red">
                                 <ShieldAlert className="h-5 w-5 text-rose-400" />
                                 <span className="font-mono font-bold text-sm text-rose-400 text-glow-red">
-                                    AI GENERATED
+                                    LIKELY AI GENERATED
                                 </span>
                             </div>
                         )}
