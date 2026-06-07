@@ -3,8 +3,8 @@
 ProofPixel — Model Training Script (train_model.py)
 ============================================================================
 
-Trains a GradientBoosting classifier using multi-feature extraction:
-    ELA + FFT + Pixel Statistics + HOG
+Trains a HistGradientBoosting classifier with StandardScaler normalization
+using multi-feature extraction: ELA + FFT + Pixel Statistics + HOG.
 
 Supports combining multiple datasets for improved accuracy.
 
@@ -38,8 +38,9 @@ from typing import List, Tuple
 import cv2
 import joblib
 import numpy as np
-from sklearn.ensemble import RandomForestClassifier
+from sklearn.ensemble import HistGradientBoostingClassifier
 from sklearn.metrics import accuracy_score, classification_report, confusion_matrix
+from sklearn.preprocessing import StandardScaler
 
 # Import feature extraction from ml_service
 from ml_service import (
@@ -212,8 +213,8 @@ def train(args: argparse.Namespace) -> None:
     logger.info("ProofPixel — Multi-Feature Model Training")
     logger.info("=" * 60)
     logger.info("Datasets: %s", [str(p) for p in dataset_paths])
-    logger.info("Classifier: RandomForest (n_estimators=%d, max_depth=%s, n_jobs=%d)",
-                args.n_estimators, args.max_depth, args.n_jobs)
+    logger.info("Classifier: HistGradientBoosting (max_iter=%d, learning_rate=%s, max_depth=%s)",
+                args.max_iter, args.learning_rate, args.max_depth)
     logger.info("=" * 60)
 
     for p in dataset_paths:
@@ -230,15 +231,23 @@ def train(args: argparse.Namespace) -> None:
     shuffle_idx = rng.permutation(len(y_train))
     X_train, y_train = X_train[shuffle_idx], y_train[shuffle_idx]
 
-    # Train — RandomForest parallelizes across all CPU cores
-    logger.info("Training RandomForest…")
+    # Normalize features — critical for gradient boosting on mixed-scale features
+    logger.info("Fitting StandardScaler on training data…")
+    scaler = StandardScaler()
+    X_train = scaler.fit_transform(X_train)
+    X_test = scaler.transform(X_test)
+
+    # Train — HistGradientBoosting with regularization
+    logger.info("Training HistGradientBoosting…")
     t0 = time.perf_counter()
 
-    clf = RandomForestClassifier(
-        n_estimators=args.n_estimators,
+    clf = HistGradientBoostingClassifier(
+        max_iter=args.max_iter,
+        learning_rate=args.learning_rate,
         max_depth=args.max_depth,
+        min_samples_leaf=args.min_samples_leaf,
+        l2_regularization=args.l2_reg,
         random_state=42,
-        n_jobs=args.n_jobs,
         verbose=1,
     )
     clf.fit(X_train, y_train)
@@ -250,22 +259,27 @@ def train(args: argparse.Namespace) -> None:
     y_pred = clf.predict(X_test)
     acc = accuracy_score(y_test, y_pred)
 
-    print(f"\n★ Accuracy: {acc * 100:.2f}%\n")
+    print(f"\n* Accuracy: {acc * 100:.2f}%\n")
     print("Classification Report:")
     print(classification_report(y_test, y_pred, target_names=["Real", "Fake (AI)"]))
     print("Confusion Matrix:")
     cm = confusion_matrix(y_test, y_pred)
     print(cm)
-    print(f"  True Negatives  (Real→Real):  {cm[0][0]}")
-    print(f"  False Positives (Real→Fake):  {cm[0][1]}")
-    print(f"  False Negatives (Fake→Real):  {cm[1][0]}")
-    print(f"  True Positives  (Fake→Fake):  {cm[1][1]}")
+    print(f"  True Negatives  (Real->Real):  {cm[0][0]}")
+    print(f"  False Positives (Real->Fake):  {cm[0][1]}")
+    print(f"  False Negatives (Fake->Real):  {cm[1][0]}")
+    print(f"  True Positives  (Fake->Fake):  {cm[1][1]}")
 
-    # Save
+    # Save model
     output_path = Path(args.output).resolve()
     joblib.dump(clf, output_path)
     size_mb = output_path.stat().st_size / (1024 * 1024)
     logger.info("Model saved to %s (%.1f MB)", output_path, size_mb)
+
+    # Save scaler alongside model
+    scaler_path = output_path.parent / "scaler.joblib"
+    joblib.dump(scaler, scaler_path)
+    logger.info("Scaler saved to %s", scaler_path)
 
     print(f"\n{'=' * 60}")
     print(f"  TRAINING COMPLETE")
@@ -275,6 +289,7 @@ def train(args: argparse.Namespace) -> None:
     print(f"  Test size:  {len(y_test)} samples")
     print(f"  Model size: {size_mb:.1f} MB")
     print(f"  Model path: {output_path}")
+    print(f"  Scaler:     {scaler_path}")
     print(f"{'=' * 60}")
 
 
@@ -284,7 +299,7 @@ def train(args: argparse.Namespace) -> None:
 
 def main() -> None:
     parser = argparse.ArgumentParser(
-        description="Train a RandomForest classifier with multi-feature extraction (ELA+FFT+Stats+HOG).",
+        description="Train a HistGradientBoosting classifier with StandardScaler + multi-feature extraction (ELA+FFT+Stats+HOG).",
     )
     parser.add_argument("--dataset", type=str, action="append", required=True,
                         help="Dataset root (repeatable).")
@@ -292,12 +307,16 @@ def main() -> None:
                         help="Output model path (default: model.joblib).")
     parser.add_argument("--max-per-class", type=int, default=10000,
                         help="Max images per class per dataset (0 = all).")
-    parser.add_argument("--n-estimators", type=int, default=200,
-                        help="Number of trees (default: 200).")
-    parser.add_argument("--max-depth", type=int, default=None,
-                        help="Max tree depth (default: None = unlimited).")
-    parser.add_argument("--n-jobs", type=int, default=-1,
-                        help="Parallel jobs (-1 = all cores). Default: -1.")
+    parser.add_argument("--max-iter", type=int, default=500,
+                        help="Max boosting iterations (default: 500).")
+    parser.add_argument("--learning-rate", type=float, default=0.05,
+                        help="Learning rate (default: 0.05).")
+    parser.add_argument("--max-depth", type=int, default=8,
+                        help="Max tree depth (default: 8).")
+    parser.add_argument("--min-samples-leaf", type=int, default=20,
+                        help="Min samples per leaf (default: 20).")
+    parser.add_argument("--l2-reg", type=float, default=0.1,
+                        help="L2 regularization (default: 0.1).")
     args = parser.parse_args()
     train(args)
 

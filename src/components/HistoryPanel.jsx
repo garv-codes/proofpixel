@@ -77,13 +77,13 @@ export function HistoryPanel({ userId, refreshKey }) {
     };
 
     return (
-        <div className="rounded-2xl border border-slate-800 bg-slate-900/50 backdrop-blur-md p-5 h-fit">
+        <div className="rounded-2xl border border-zinc-800 bg-zinc-900/50 p-5 h-fit">
             {/* Header */}
             <div className="flex items-center justify-between mb-4">
                 <div className="flex items-center gap-2">
-                    <History className="h-4 w-4 text-emerald-400" />
-                    <h2 className="text-sm font-mono font-bold text-white tracking-wider">
-                        RECENT SCANS
+                    <History className="h-4 w-4 text-indigo-400" />
+                    <h2 className="text-sm font-semibold text-white tracking-wider uppercase">
+                        Recent Scans
                     </h2>
                 </div>
 
@@ -92,7 +92,7 @@ export function HistoryPanel({ userId, refreshKey }) {
                     <AlertDialogTrigger asChild>
                         <button
                             disabled={clearing || scans.length === 0}
-                            className={`flex items-center gap-1.5 text-xs font-mono transition-colors focus:outline-none disabled:opacity-50 ${scans.length === 0 || loading ? 'hidden' : 'text-slate-500 hover:text-rose-400'}`}
+                            className={`flex items-center gap-1.5 text-xs transition-colors focus:outline-none disabled:opacity-50 ${scans.length === 0 || loading ? 'hidden' : 'text-zinc-500 hover:text-red-400'}`}
                         >
                             {clearing ? (
                                 <Loader2 className="h-3.5 w-3.5 animate-spin" />
@@ -105,22 +105,22 @@ export function HistoryPanel({ userId, refreshKey }) {
 
                     {scans.length > 0 && (
                         <AlertDialogContent
-                            className="bg-slate-900 border-slate-800 text-slate-200"
+                            className="bg-zinc-900 border-zinc-800 text-zinc-200"
                             onCloseAutoFocus={(e) => e.preventDefault()}
                         >
                             <AlertDialogHeader>
-                                <AlertDialogTitle className="font-mono text-white">Clear Scan History?</AlertDialogTitle>
-                                <AlertDialogDescription className="text-slate-400 leading-relaxed">
+                                <AlertDialogTitle className="text-white">Clear Scan History?</AlertDialogTitle>
+                                <AlertDialogDescription className="text-zinc-400 leading-relaxed">
                                     Are you sure you want to delete your entire scan history? This cannot be undone.
                                 </AlertDialogDescription>
                             </AlertDialogHeader>
                             <AlertDialogFooter>
-                                <AlertDialogCancel className="bg-transparent border-slate-700 hover:bg-slate-800 hover:text-slate-200 focus:ring-slate-700">
+                                <AlertDialogCancel className="bg-transparent border-zinc-700 hover:bg-zinc-800 hover:text-zinc-200 focus:ring-zinc-700">
                                     Cancel
                                 </AlertDialogCancel>
                                 <AlertDialogAction
                                     onClick={handleClearHistory}
-                                    className="bg-rose-500 hover:bg-rose-600 text-white font-mono"
+                                    className="bg-red-500 hover:bg-red-600 text-white"
                                 >
                                     Delete All
                                 </AlertDialogAction>
@@ -133,7 +133,7 @@ export function HistoryPanel({ userId, refreshKey }) {
             {/* Loading state */}
             {loading && (
                 <div className="flex items-center justify-center py-8">
-                    <svg className="animate-spin h-5 w-5 text-emerald-400" viewBox="0 0 24 24" fill="none">
+                    <svg className="animate-spin h-5 w-5 text-indigo-400" viewBox="0 0 24 24" fill="none">
                         <circle cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="3" className="opacity-25" />
                         <path d="M4 12a8 8 0 018-8" stroke="currentColor" strokeWidth="3" strokeLinecap="round" className="opacity-75" />
                     </svg>
@@ -142,13 +142,12 @@ export function HistoryPanel({ userId, refreshKey }) {
 
             {/* Empty state */}
             {!loading && scans.length === 0 && (
-                <div className="text-center py-12 px-4 rounded-xl border border-dashed border-slate-800/80 bg-slate-900/30">
-                    <div className="mx-auto w-16 h-16 mb-4 relative flex items-center justify-center">
-                        <div className="absolute inset-0 rounded-full bg-emerald-500/10 blur-xl"></div>
-                        <SearchX className="h-8 w-8 text-slate-500 relative z-10" />
+                <div className="text-center py-12 px-4 rounded-xl border border-dashed border-zinc-800 bg-zinc-900/30">
+                    <div className="mx-auto w-16 h-16 mb-4 flex items-center justify-center rounded-full bg-zinc-800/50">
+                        <SearchX className="h-8 w-8 text-zinc-500" />
                     </div>
-                    <p className="text-sm font-semibold text-slate-300 mb-1">Your history is clear</p>
-                    <p className="text-[11px] text-slate-500 max-w-[200px] mx-auto leading-relaxed">
+                    <p className="text-sm font-semibold text-zinc-300 mb-1">Your history is clear</p>
+                    <p className="text-[11px] text-zinc-500 max-w-[200px] mx-auto leading-relaxed">
                         Every image you analyze will automatically be saved securely here for easy reference.
                     </p>
                 </div>
@@ -162,12 +161,12 @@ export function HistoryPanel({ userId, refreshKey }) {
                         return (
                             <div
                                 key={scan.id}
-                                className="flex items-center gap-3 p-3 rounded-xl bg-slate-800/50 border border-slate-700/50 hover:border-slate-600 transition-colors duration-200"
+                                className="flex items-center gap-3 p-3 rounded-xl bg-zinc-800/50 border border-zinc-700/50 hover:border-zinc-600 transition-colors duration-200"
                             >
-                                {/* Thumbnail placeholder — hash-based color */}
-                                <div className={`flex-shrink-0 h-10 w-10 rounded-lg flex items-center justify-center text-xs font-mono ${isAI
-                                    ? "bg-rose-500/10 border border-rose-500/30 text-rose-400"
-                                    : "bg-emerald-500/10 border border-emerald-500/30 text-emerald-400"
+                                {/* Thumbnail placeholder */}
+                                <div className={`flex-shrink-0 h-10 w-10 rounded-lg flex items-center justify-center text-xs font-medium ${isAI
+                                    ? "bg-red-500/10 border border-red-500/30 text-red-500"
+                                    : "bg-green-500/10 border border-green-500/30 text-green-500"
                                     }`}>
                                     {isAI
                                         ? <AlertTriangle className="h-4 w-4" />
@@ -179,22 +178,22 @@ export function HistoryPanel({ userId, refreshKey }) {
                                 <div className="flex-1 min-w-0">
                                     <div className="flex items-center gap-2">
                                         {/* Verdict badge */}
-                                        <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-mono font-bold ${isAI
-                                            ? "bg-rose-500/10 text-rose-400 border border-rose-500/30"
-                                            : "bg-emerald-500/10 text-emerald-400 border border-emerald-500/30"
+                                        <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold ${isAI
+                                            ? "bg-red-500/10 text-red-500 border border-red-500/30"
+                                            : "bg-green-500/10 text-green-500 border border-green-500/30"
                                             }`}>
                                             {isAI ? "AI" : "REAL"}
                                         </span>
-                                        <span className="text-[10px] font-mono text-slate-600">
+                                        <span className="text-[10px] font-medium text-zinc-500">
                                             {scan.ai_probability.toFixed(1)}%
                                         </span>
                                     </div>
                                     <div className="flex items-center gap-1 mt-1">
-                                        <Clock className="h-2.5 w-2.5 text-slate-600" />
-                                        <span className="text-[10px] text-slate-600 font-mono">
+                                        <Clock className="h-2.5 w-2.5 text-zinc-600" />
+                                        <span className="text-[10px] text-zinc-500">
                                             {timeAgo(scan.created_at)}
                                         </span>
-                                        <span className="text-[10px] text-slate-700 font-mono ml-1">
+                                        <span className="text-[10px] text-zinc-600 ml-1">
                                             {scan.processing_time_ms}ms
                                         </span>
                                     </div>

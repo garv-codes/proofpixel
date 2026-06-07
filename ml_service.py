@@ -50,6 +50,7 @@ HOG_ORIENTATIONS: int = 9
 
 # Model paths
 MODEL_PATH: Path = Path(__file__).resolve().parent / "model.joblib"
+SCALER_PATH: Path = Path(__file__).resolve().parent / "scaler.joblib"
 
 # Optional: download model from URL if not found locally
 # Set the MODEL_URL env var to a direct download link (e.g. Supabase Storage)
@@ -59,6 +60,7 @@ MODEL_URL: str = os.getenv("MODEL_URL", "")
 # Model cache
 # ---------------------------------------------------------------------------
 _model = None
+_scaler = None
 
 
 def _download_model(url: str, dest: Path) -> bool:
@@ -120,11 +122,20 @@ def _load_model():
 
 def _load_model_from_file():
     """Actually load the model from the local file."""
-    global _model
+    global _model, _scaler
     try:
         size_mb = MODEL_PATH.stat().st_size / (1024 * 1024)
         logger.info("Loading model from %s (%.1f MB)", MODEL_PATH, size_mb)
         _model = joblib.load(MODEL_PATH)
+
+        # Load scaler if available
+        if SCALER_PATH.exists():
+            _scaler = joblib.load(SCALER_PATH)
+            logger.info("Scaler loaded from %s", SCALER_PATH)
+        else:
+            logger.warning("No scaler found at %s — using raw features.", SCALER_PATH)
+            _scaler = None
+
         return _model
     except Exception as exc:
         logger.error("Failed to load model: %s. Using random placeholder.", exc)
@@ -448,6 +459,9 @@ def predict_image(image_bytes: bytes) -> Tuple[float, bool, str, str]:
 
     if model is not None:
         features_2d = features.reshape(1, -1)
+        # Apply scaler if available (matches training pipeline)
+        if _scaler is not None:
+            features_2d = _scaler.transform(features_2d)
         proba = model.predict_proba(features_2d)[0]  # [P(Real), P(AI)]
         ai_probability = float(proba[1]) * 100.0
     else:

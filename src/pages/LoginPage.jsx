@@ -1,15 +1,13 @@
 /**
  * LoginPage — Authentication page with Sign In / Sign Up toggle
  *
- * Design:
- *   Dark-themed card centered on the page with glassmorphism effect.
- *   Uses Supabase Auth for email+password authentication.
- *   Toggle between "Sign In" and "Sign Up" modes within the same card.
+ * Clean card centered on dark background.
+ * Uses Supabase Auth for email+password authentication.
  */
 
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { Shield, LogIn, UserPlus, Mail, Lock, AlertCircle } from "lucide-react";
+import { LogIn, UserPlus, Mail, Lock, AlertCircle, ScanEye } from "lucide-react";
 import { supabase } from "@/lib/supabaseClient";
 
 export default function LoginPage() {
@@ -29,18 +27,11 @@ export default function LoginPage() {
 
         try {
             if (isSignUp) {
-                /* ── Sign Up ─────────────────────────────────────────
-                 * Creates a new user in Supabase Auth. By default,
-                 * Supabase sends a confirmation email. The user must
-                 * verify their email before they can sign in. */
                 const { error } = await supabase.auth.signUp({ email, password });
                 if (error) throw error;
                 setSuccessMsg("Check your email to confirm your account, then sign in.");
                 setIsSignUp(false);
             } else {
-                /* ── Sign In ─────────────────────────────────────────
-                 * Authenticates with email+password and creates a JWT
-                 * session stored in localStorage by the Supabase client. */
                 const { error } = await supabase.auth.signInWithPassword({ email, password });
                 if (error) throw error;
                 navigate("/");
@@ -53,34 +44,34 @@ export default function LoginPage() {
     };
 
     return (
-        <div className="min-h-screen bg-slate-950 flex items-center justify-center p-4">
+        <div className="min-h-screen bg-zinc-950 flex items-center justify-center p-4">
             <div className="w-full max-w-md">
-                {/* ── Brand Header ───────────────────────────── */}
+                {/* Brand Header */}
                 <div className="text-center mb-8">
-                    <div className="inline-flex items-center justify-center p-3 rounded-2xl bg-emerald-500/10 glow-green mb-4">
-                        <span className="text-4xl">🛡️</span>
+                    <div className="inline-flex items-center justify-center p-3 rounded-2xl bg-indigo-500/10 mb-4">
+                        <ScanEye className="h-8 w-8 text-indigo-400" />
                     </div>
-                    <h1 className="text-2xl font-mono font-bold text-white tracking-wider">
-                        PROOFPIXEL
+                    <h1 className="text-2xl font-bold text-white tracking-tight">
+                        ProofPixel
                     </h1>
-                    <p className="text-sm text-slate-500 font-mono mt-1">
-                        DEEPFAKE DETECTION
+                    <p className="text-sm text-zinc-500 mt-1">
+                        Image Forensics
                     </p>
                 </div>
 
-                {/* ── Auth Card ───────────────────────────────── */}
-                <div className="rounded-2xl border border-slate-800 bg-slate-900/50 backdrop-blur-md p-8 shadow-2xl">
+                {/* Auth Card */}
+                <div className="rounded-2xl border border-zinc-800 bg-zinc-900/50 p-8 shadow-2xl">
                     <h2 className="text-lg font-semibold text-white mb-6 flex items-center gap-2">
                         {isSignUp ? (
-                            <><UserPlus className="h-5 w-5 text-emerald-400" /> Create Account</>
+                            <><UserPlus className="h-5 w-5 text-indigo-400" /> Create Account</>
                         ) : (
-                            <><LogIn className="h-5 w-5 text-emerald-400" /> Sign In</>
+                            <><LogIn className="h-5 w-5 text-indigo-400" /> Sign In</>
                         )}
                     </h2>
 
                     {/* Error message */}
                     {error && (
-                        <div className="mb-4 p-3 rounded-lg bg-rose-500/10 border border-rose-500/30 text-rose-400 text-sm flex items-center gap-2">
+                        <div className="mb-4 p-3 rounded-lg bg-red-500/10 border border-red-500/30 text-red-400 text-sm flex items-center gap-2">
                             <AlertCircle className="h-4 w-4 flex-shrink-0" />
                             {error}
                         </div>
@@ -88,7 +79,7 @@ export default function LoginPage() {
 
                     {/* Success message */}
                     {successMsg && (
-                        <div className="mb-4 p-3 rounded-lg bg-emerald-500/10 border border-emerald-500/30 text-emerald-400 text-sm">
+                        <div className="mb-4 p-3 rounded-lg bg-green-500/10 border border-green-500/30 text-green-400 text-sm">
                             {successMsg}
                         </div>
                     )}
@@ -96,36 +87,36 @@ export default function LoginPage() {
                     <form onSubmit={handleSubmit} className="space-y-4">
                         {/* Email field */}
                         <div>
-                            <label className="block text-xs font-mono text-slate-500 mb-1.5 uppercase tracking-wider">
+                            <label className="block text-xs text-zinc-500 mb-1.5 uppercase tracking-wider font-medium">
                                 Email
                             </label>
                             <div className="relative">
-                                <Mail className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-500" />
+                                <Mail className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-zinc-500" />
                                 <input
                                     type="email"
                                     value={email}
                                     onChange={(e) => setEmail(e.target.value)}
                                     required
-                                    className="w-full pl-10 pr-4 py-3 rounded-lg bg-slate-800/50 border border-slate-700 text-white text-sm font-mono placeholder:text-slate-600 focus:outline-none focus:border-emerald-500/50 focus:ring-1 focus:ring-emerald-500/25 transition-all"
-                                    placeholder="agent@proofpixel.ai"
+                                    className="w-full pl-10 pr-4 py-3 rounded-lg bg-zinc-800/50 border border-zinc-700 text-white text-sm placeholder:text-zinc-600 focus:outline-none focus:border-indigo-500/50 focus:ring-1 focus:ring-indigo-500/25 transition-all"
+                                    placeholder="you@example.com"
                                 />
                             </div>
                         </div>
 
                         {/* Password field */}
                         <div>
-                            <label className="block text-xs font-mono text-slate-500 mb-1.5 uppercase tracking-wider">
+                            <label className="block text-xs text-zinc-500 mb-1.5 uppercase tracking-wider font-medium">
                                 Password
                             </label>
                             <div className="relative">
-                                <Lock className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-500" />
+                                <Lock className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-zinc-500" />
                                 <input
                                     type="password"
                                     value={password}
                                     onChange={(e) => setPassword(e.target.value)}
                                     required
                                     minLength={6}
-                                    className="w-full pl-10 pr-4 py-3 rounded-lg bg-slate-800/50 border border-slate-700 text-white text-sm font-mono placeholder:text-slate-600 focus:outline-none focus:border-emerald-500/50 focus:ring-1 focus:ring-emerald-500/25 transition-all"
+                                    className="w-full pl-10 pr-4 py-3 rounded-lg bg-zinc-800/50 border border-zinc-700 text-white text-sm placeholder:text-zinc-600 focus:outline-none focus:border-indigo-500/50 focus:ring-1 focus:ring-indigo-500/25 transition-all"
                                     placeholder="••••••••"
                                 />
                             </div>
@@ -135,7 +126,7 @@ export default function LoginPage() {
                         <button
                             type="submit"
                             disabled={loading}
-                            className="w-full py-3 rounded-lg bg-gradient-to-r from-emerald-500 to-teal-500 text-white font-mono font-semibold text-sm hover:from-emerald-400 hover:to-teal-400 transition-all duration-200 hover:scale-[1.02] active:scale-[0.98] disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100 shadow-lg shadow-emerald-500/20"
+                            className="w-full py-3 rounded-lg bg-indigo-500 text-white font-semibold text-sm hover:bg-indigo-400 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
                         >
                             {loading
                                 ? "Signing in..."
@@ -150,7 +141,7 @@ export default function LoginPage() {
                     <div className="mt-6 text-center">
                         <button
                             onClick={() => { setIsSignUp(!isSignUp); setError(""); setSuccessMsg(""); }}
-                            className="text-sm text-slate-500 hover:text-emerald-400 transition-colors font-mono"
+                            className="text-sm text-zinc-500 hover:text-indigo-400 transition-colors"
                         >
                             {isSignUp
                                 ? "Already have an account? Sign In"
