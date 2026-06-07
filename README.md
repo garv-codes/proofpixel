@@ -1,11 +1,4 @@
 ---
-title: ProofPixel
-emoji: 🛡️
-colorFrom: gray
-colorTo: indigo
-sdk: docker
-pinned: false
----
 
 <div align="center">
 
